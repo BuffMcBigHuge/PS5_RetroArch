@@ -60,7 +60,8 @@ function untranslated(page, catalog) {
     // Text the scripts write later is translated too.
     await page.locator('[data-page=settings]').click();
     await page.waitForFunction(() => document.querySelector('#settings-heading').textContent === 'Réglages globaux de RetroArch');
-    assert.equal(await page.locator('#page-title').innerText(), 'Réglages');
+    // The heading is static (translated while hidden): the page has changed once its title has.
+    await page.waitForFunction(() => document.querySelector('#page-title').textContent === 'Réglages');
     // A count the script writes ("{0} settings").
     await page.waitForFunction(() => /^\d+ réglages$/.test(document.querySelector('#settings-count').textContent));
     assert.deepEqual(await untranslated(page, french), [], 'the settings page is all French');
