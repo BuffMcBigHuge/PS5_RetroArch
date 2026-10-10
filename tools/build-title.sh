@@ -323,6 +323,7 @@ inputs += sorted(p for p in (root / "third_party/qrcodegen").rglob("*") if p.is_
 inputs += sorted(p for p in (root / "webui").rglob("*") if p.is_file())
 inputs += sorted(p for p in (root / "daemon").rglob("*") if p.is_file())
 inputs.append(root / "tools/build-webui-daemon.sh")
+inputs.append(root / "tools/xmb-system-icons.py")
 inputs.append(root / "build/lapy/build/owned_root_daemon-service-verified-client/lapy-root-daemon.elf")
 inputs += sorted(p for p in (root / "build/webui-core-metadata").rglob("*") if p.is_file())
 inputs += [pathlib.Path(name) for name in sys.argv[3:]]
@@ -477,6 +478,9 @@ mkdir -p "$dist/webui"
 cp -a "$root/webui/." "$dist/webui/"
 cp "$webui_daemon" "$dist/webui/ps5-retroarch-webui.elf"
 cp "$lapy_daemon" "$dist/lapy-root-daemon.elf"
+# XMB's playlist tabs show the systems' hardware from the WebUI's artwork, named by
+# database (issue 35); game rows keep XMB's own content icon.
+python3 "$root/tools/xmb-system-icons.py" "$dist/assets/xmb/monochrome/png"
 # The certificates the daemon verifies HTTPS against (curl over mbedTLS): Mozilla's
 # bundle as EmulationStation ships it, from its pinned source.
 certificates="$root/.deps/es-de/resources/certificates/curl-ca-bundle.crt"

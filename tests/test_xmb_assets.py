@@ -35,6 +35,42 @@ class XmbAssets(unittest.TestCase):
         self.assertTrue((base / 'monochrome/FONT-LICENSE.txt').is_file())
 
 
+class XmbSystemIcons(unittest.TestCase):
+    """Issue 35: each playlist tab shows its system's hardware (tools/xmb-system-icons.py)."""
+
+    def test_one_icon_per_database_and_owned_by_its_licence(self):
+        import fnmatch
+        import sys
+        import tempfile
+        from PIL import Image
+        sys.path.insert(0, str(ROOT / 'tools'))
+        generator = __import__('importlib').import_module('xmb-system-icons')
+        databases = [database for _, database in generator.platforms()]
+        self.assertGreaterEqual(len(databases), 48)
+        self.assertIn('Nintendo - Super Nintendo Entertainment System', databases)
+        with tempfile.TemporaryDirectory() as temp:
+            subprocess.run([sys.executable, 'tools/xmb-system-icons.py', temp], cwd=ROOT, check=True,
+                           capture_output=True)
+            made = sorted(p.name for p in Path(temp).iterdir())
+            self.assertEqual(made, sorted(f'{database}.png' for database in databases))
+            self.assertFalse([name for name in made if name.endswith('-content.png')])
+            for name in made:
+                with Image.open(Path(temp) / name) as icon:
+                    self.assertEqual((icon.size, icon.mode), ((256, 256), 'RGBA'), name)
+                    # The caption (logo and year) is cropped off: the hardware is centred,
+                    # so the bottom rows are as transparent as the top ones.
+                    box = icon.getchannel('A').getbbox()
+                    self.assertLessEqual(abs(box[1] - (256 - box[3])), 2, name)
+        components = {c['id']: c for c in json.loads((ROOT / 'tooling/notices/components.json').read_text())['components']}
+        fixed = [f'assets/xmb/monochrome/png/{p.name}' for p in (ROOT / 'assets/xmb/monochrome/png').iterdir()]
+        generated = [f'assets/xmb/monochrome/png/{name}' for name in made]
+        owns = lambda component, path: any(fnmatch.fnmatchcase(path, g) for g in components[component]['artifacts'])
+        for path in fixed:
+            self.assertTrue(owns('retroarch-assets', path) and not owns('xmb-system-icons', path), path)
+        for path in generated:
+            self.assertTrue(owns('xmb-system-icons', path) and not owns('retroarch-assets', path), path)
+
+
 class XmbGeometry(unittest.TestCase):
     def test_strip_expansion_preserves_triangles_and_bounds(self):
         """Execute the port's C mapping, including the 8,064-vertex ribbon."""

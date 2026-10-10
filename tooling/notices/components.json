@@ -86,6 +86,32 @@
       "modifications": "Bundled artwork; original colors preserved. System artwork is framed with CSS to show the hardware."
     },
     {
+      "id": "xmb-system-icons",
+      "name": "XMB playlist icons from the Linear ES-DE system artwork",
+      "kind": "asset",
+      "artifacts": [
+        "assets/xmb/monochrome/png/[A-KM-Z]*.png"
+      ],
+      "licence": "MIT",
+      "copyright": [
+        "Copyright (c) 2024-2026 Northwestern Software AB",
+        "Copyright (c) 2024 Leon Styhre",
+        "Copyright (c) 2023 Weestuarty"
+      ],
+      "texts": [
+        {
+          "from": "webui/assets/systems/LICENSE",
+          "to": "LICENSE"
+        }
+      ],
+      "source": {
+        "kind": "fixed",
+        "revision": "bundled source snapshot; original SHA-256 manifest in webui/assets/systems/SOURCE.json",
+        "remote": "https://gitlab.com/es-de/themes/linear-es-de"
+      },
+      "modifications": "Generated at build time by tools/xmb-system-icons.py: each system picture cropped to its hardware (the caption below it removed), centred and scaled to 256 x 256 PNG, named by RetroArch database."
+    },
+    {
       "id": "webui-lucide",
       "name": "Lucide WebUI icons (including Feather-derived icons)",
       "kind": "asset",
@@ -256,7 +282,7 @@
       "id": "retroarch-assets",
       "name": "RetroArch assets: the XMB monochrome theme and its font",
       "kind": "asset",
-      "artifacts": ["assets/xmb/**"],
+      "artifacts": ["assets/xmb/COPYING", "assets/xmb/source.json", "assets/xmb/monochrome/font.ttf", "assets/xmb/monochrome/FONT-LICENSE.txt", "assets/xmb/monochrome/README.md", "assets/xmb/monochrome/png/[a-z]*.png", "assets/xmb/monochrome/png/Libretro - Pad.png"],
       "licence": "CC-BY-4.0 (icons); the M+ FONT LICENSE (font)",
       "copyright": ["The RetroArch assets contributors (https://github.com/libretro/retroarch-assets)", "The M+ FONTS PROJECT (monochrome/font.ttf)"],
       "texts": [{"from": "assets/xmb/COPYING", "to": "CC-BY-4.0.txt"}, {"from": "assets/xmb/monochrome/FONT-LICENSE.txt", "to": "M+-FONT-LICENSE.txt"}, {"from": "assets/xmb/source.json", "to": "source.json"}],
