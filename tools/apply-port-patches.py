@@ -4368,6 +4368,16 @@ EDITS += [('configuration.h',
   '#include <time.h> /* patches/series, 0121 */\n'
   'extern unsigned long ps5_fg_size_pixels_of(unsigned size); /* patches/series, 0120 */\n',
   '#include <time.h> /* patches/series, 0121 */'),
+ ('gfx/video_driver.c',
+  '         last_fps     = TIME_TO_FPS(curr_time, new_time, new_frames);\n         new_frames   = 0;\n',
+  '         last_fps     = TIME_TO_FPS(curr_time, new_time, new_frames);\n'
+  '         /* patches/series, 0121: each game frame is presented shader_subframes times (frame generation): '
+  'the rate shown is the rate of\n'
+  '          * the frames the display gets */\n'
+  '         if (video_info.shader_subframes > 1)\n'
+  '            last_fps *= (float)video_info.shader_subframes;\n'
+  '         new_frames   = 0;\n',
+  'patches/series, 0121: each game frame is presented shader_subframes times'),
  ('retroarch.c',
   '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
   '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'
