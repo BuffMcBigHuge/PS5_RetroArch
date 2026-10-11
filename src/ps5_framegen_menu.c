@@ -180,6 +180,8 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
 {
    static unsigned calls;
    static unsigned long presents, last_generated;
+   static unsigned long gap_n[2], gap_off[2];
+   static double gap_sum[2], gap_max[2];
    static struct timespec last;
    struct ps5_fg_options now;
    char text[200];
@@ -191,11 +193,34 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
    clock_gettime(CLOCK_MONOTONIC, &t);
    if (last.tv_sec == 0)
       last = t;
+   {
+      /* Present spacing, apart for presents that showed a generated frame and those that did not (the log line below) */
+      static struct timespec prev;
+      static unsigned long prev_generated;
+      if (prev.tv_sec)
+      {
+         const double ms = (double)(t.tv_sec - prev.tv_sec) * 1e3 + (double)(t.tv_nsec - prev.tv_nsec) / 1e6;
+         const unsigned cls = generated != prev_generated;   /* 1: this present showed a generated frame */
+         gap_n[cls]++;
+         gap_sum[cls] += ms;
+         if (ms > gap_max[cls])
+            gap_max[cls] = ms;
+         if (ms > 10.5 || ms < 6.0)
+            gap_off[cls]++;
+      }
+      prev           = t;
+      prev_generated = generated;
+   }
    if ((t.tv_sec - last.tv_sec) * 1000000000L + (t.tv_nsec - last.tv_nsec) >= 2000000000L)
    {
       double seconds = (double)(t.tv_sec - last.tv_sec) + (double)(t.tv_nsec - last.tv_nsec) / 1e9;
       RARCH_LOG("[FrameGen] pace: %.1f presents/s, %.1f generated/s\n", (double)presents / seconds,
             (double)(generated - last_generated) / seconds);
+      RARCH_LOG("[FrameGen] spacing (ms): real n %lu mean %.2f max %.2f off %lu | generated n %lu mean %.2f max %.2f off %lu\n",
+            gap_n[0], gap_n[0] ? gap_sum[0] / (double)gap_n[0] : 0.0, gap_max[0], gap_off[0],
+            gap_n[1], gap_n[1] ? gap_sum[1] / (double)gap_n[1] : 0.0, gap_max[1], gap_off[1]);
+      memset(gap_n, 0, sizeof(gap_n)); memset(gap_sum, 0, sizeof(gap_sum));
+      memset(gap_max, 0, sizeof(gap_max)); memset(gap_off, 0, sizeof(gap_off));
       presents       = 0;
       last_generated = generated;
       last           = t;
