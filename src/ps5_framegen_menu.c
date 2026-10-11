@@ -16,6 +16,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include <lists/file_list.h>
 #include <retro_miscellaneous.h>
@@ -80,8 +81,10 @@ static void ps5_fg_current(struct ps5_fg_options *o)
 {
    settings_t *settings = config_get_ptr();
    o->enable            = settings->bools.video_framegen ? 1 : 0;
-   o->subframes         = settings->uints.video_shader_subframes;
-   if (o->subframes < 1 || o->subframes > 4)
+   o->subframes         = settings->bools.video_framegen_auto ? 0 : settings->uints.video_shader_subframes;
+   if (o->subframes > 4)
+      o->subframes = 1;
+   if (!settings->bools.video_framegen_auto && o->subframes < 1)
       o->subframes = 1;
    o->method  = settings->uints.video_framegen_method % 3;
    o->cadence = settings->uints.video_framegen_cadence % 5;
@@ -112,7 +115,9 @@ void ps5_fg_menu_step(const char *label, int direction)
    before = now;
    ps5_fg_step(&now, (unsigned)item, direction);
    settings->bools.video_framegen         = now.enable != 0;
-   settings->uints.video_shader_subframes = now.subframes;
+   settings->bools.video_framegen_auto    = now.subframes == 0;
+   if (now.subframes)
+      settings->uints.video_shader_subframes = now.subframes;
    settings->uints.video_framegen_method  = now.method;
    settings->uints.video_framegen_cadence = now.cadence;
    settings->uints.video_framegen_size    = now.size;
@@ -120,7 +125,7 @@ void ps5_fg_menu_step(const char *label, int direction)
    ps5_fg_save(&now);
    /* The rate is read when the video output starts: its timing follows it */
    if (now.subframes != before.subframes)
-      command_event(CMD_EVENT_REINIT, NULL);
+      command_event(CMD_EVENT_REINIT, NULL);   /* (Auto picks its rate as the video output starts) */
 }
 
 /* The entry's name (s2) and its value (s), as the menu's value callback wants them */
@@ -171,16 +176,35 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
       unsigned long generated)
 {
    static unsigned calls;
+   static unsigned long presents, last_generated;
+   static struct timespec last;
    struct ps5_fg_options now;
    char text[200];
    settings_t *settings = config_get_ptr();
-   if (!settings->bools.video_framegen_osd || (++calls % 30))
+   struct timespec t;
+   if (!settings->bools.video_framegen_osd)
+      return;
+   presents++;
+   clock_gettime(CLOCK_MONOTONIC, &t);
+   if (last.tv_sec == 0)
+      last = t;
+   if ((t.tv_sec - last.tv_sec) * 1000000000L + (t.tv_nsec - last.tv_nsec) >= 2000000000L)
+   {
+      double seconds = (double)(t.tv_sec - last.tv_sec) + (double)(t.tv_nsec - last.tv_nsec) / 1e9;
+      RARCH_LOG("[FrameGen] pace: %.1f presents/s, %.1f generated/s\n", (double)presents / seconds,
+            (double)(generated - last_generated) / seconds);
+      presents       = 0;
+      last_generated = generated;
+      last           = t;
+   }
+   if (++calls % 30)
       return;
    ps5_fg_current(&now);
    if (!now.enable)
       snprintf(text, sizeof(text), "FrameGen: off");
-   else if (now.subframes < 2)
-      snprintf(text, sizeof(text), "FrameGen: waiting - set Output Rate to 2x or more");
+   else if (subframes < 2)
+      snprintf(text, sizeof(text), "FrameGen: waiting - the output rate is not a multiple of the game's (Output Rate %s)",
+            ps5_fg_choice_name(PS5_FG_SUBFRAMES, now.subframes));
    else if (!plan)
       snprintf(text, sizeof(text), "FrameGen: paused (menu, fast-forward or pause)");
    else

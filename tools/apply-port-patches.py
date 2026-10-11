@@ -4309,6 +4309,59 @@ EDITS += [('configuration.h',
   '   xmb->categories_active_idx_old     = 1;\n',
   '/* patches/series, 0120: the menu opens on Main Menu, with Frame Generation to its left */')]
 
+# Frame generation, Output Rate Auto (patches/series, 0121).
+EDITS += [('configuration.h',
+  '      bool video_framegen_osd;',
+  '      bool video_framegen_auto; /* patches/series, 0121: Output Rate Auto */\n'
+  '      bool video_framegen_osd;',
+  'bool video_framegen_auto; /* patches/series, 0121'),
+ ('configuration.c',
+  '   SETTING_BOOL("video_framegen_osd", &settings->bools.video_framegen_osd, true, false, false); /* '
+  'patches/series, 0120 */\n',
+  '   SETTING_BOOL("video_framegen_auto", &settings->bools.video_framegen_auto, true, true, false); /* '
+  'patches/series, 0121 */\n'
+  '   SETTING_BOOL("video_framegen_osd", &settings->bools.video_framegen_osd, true, false, false); /* '
+  'patches/series, 0120 */\n',
+  'SETTING_BOOL("video_framegen_auto", &settings->bools.video_framegen_auto, true, true, false); /* '
+  'patches/series, 0121 */'),
+ ('configuration.c',
+  '&settings->bools.video_framegen, true, false, false);',
+  '&settings->bools.video_framegen, true, true, false);',
+  '&settings->bools.video_framegen, true, true, false);'),
+ ('retroarch.c',
+  '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
+  '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'
+  '   bool video_adaptive_vsync              = settings->bools.video_adaptive_vsync;\n',
+  '   /* patches/series, 0121: Output Rate Auto: the presents per game frame that fill the display (the rate '
+  'of the mode\n'
+  '    * the video output really runs in, which the port keeps in vulkan_ps5_display_refresh_x1000) */\n'
+  '   if (settings->bools.video_framegen && settings->bools.video_framegen_auto && input_fps > 20.0)\n'
+  '   {\n'
+  '      extern unsigned vulkan_ps5_display_refresh_x1000;\n'
+  '      float display = vulkan_ps5_display_refresh_x1000 ? vulkan_ps5_display_refresh_x1000 / 1000.0f : '
+  'video_refresh_rate;\n'
+  '      /* The title declares high-frame-rate output (sce_sys/param.json attribute3 0x80040): the console '
+  'sends\n'
+  '       * 119.88 Hz even where the Vulkan mode list shows its 3840x2160 mode at 59.94, and RetroArch must '
+  'pace\n'
+  '       * on the real rate or its vsync and audio timing are those of half the display. */\n'
+  '      if (display < 100.0f)\n'
+  '      {\n'
+  '         display = 119.88f;\n'
+  '         video_refresh_rate = display;\n'
+  '         settings->floats.video_refresh_rate = display;\n'
+  '      }\n'
+  '      float n       = display / (float)input_fps;\n'
+  '      unsigned s    = n < 1.5f ? 1 : n < 2.5f ? 2 : n < 3.5f ? 3 : 4;\n'
+  '      RARCH_LOG("[FrameGen] Output Rate Auto: display %.3f Hz, game %.3f fps -> %ux\\n", display, '
+  'input_fps, s);\n'
+  '      settings->uints.video_shader_subframes = s;\n'
+  '   }\n'
+  '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
+  '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'
+  '   bool video_adaptive_vsync              = settings->bools.video_adaptive_vsync;\n',
+  'Output Rate Auto: the presents per game frame')]
+
 # Changes that are withdrawn rather than deleted, by marker.
 #
 # An entry here names an insertion this driver no longer needs, and the
