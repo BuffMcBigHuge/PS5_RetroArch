@@ -4328,6 +4328,18 @@ EDITS += [('configuration.h',
   '&settings->bools.video_framegen, true, false, false);',
   '&settings->bools.video_framegen, true, true, false);',
   '&settings->bools.video_framegen, true, true, false);'),
+ ('gfx/drivers/vulkan.c',
+  '                        if (vk->framegen_call + 1 < (vk->framegen_period ? vk->framegen_period : 1))\n'
+  '                           vk_framegen_invalidate(vk->framegen);\n',
+  '                        /* patches/series, 0121: only a steady cadence is interpolated. A gap that is not '
+  'the group length (an\n'
+  '                         * animation that steps every few frames, a core that skipped one) is not motion '
+  'between\n'
+  '                         * two frames, and a half step shown just before the next real frame flickers. '
+  '*/\n'
+  '                        if (fg_gap != (vk->framegen_period ? vk->framegen_period : 1))\n'
+  '                           vk_framegen_invalidate(vk->framegen);\n',
+  'patches/series, 0121: only a steady cadence is interpolated'),
  ('retroarch.c',
   '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
   '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'
