@@ -35,6 +35,13 @@
 
 #define PS5_FG_LABEL_FOLDER "ps5_framegen"
 
+/* Presents of each picture (the display's rate over the target's), set with the rate (patches/series, 0121) */
+unsigned ps5_fg_dup = 1;
+/* The rate of the pictures the display gets: 119.88 or 59.94 (the Target Framerate), set with the rate */
+float ps5_fg_target_fps = 119.88f;
+/* The instant of the picture the last present showed (1: a real frame), set by the driver */
+float ps5_fg_dbg_t = 1.0f;
+
 /* The loaded core's frame rate, kept by the video setup (patches/series, 0121) for the driver's cadence check */
 float ps5_fg_core_fps;
 
@@ -84,11 +91,7 @@ static void ps5_fg_current(struct ps5_fg_options *o)
 {
    settings_t *settings = config_get_ptr();
    o->enable            = settings->bools.video_framegen ? 1 : 0;
-   o->subframes         = settings->bools.video_framegen_auto ? 0 : settings->uints.video_shader_subframes;
-   if (o->subframes > 4)
-      o->subframes = 1;
-   if (!settings->bools.video_framegen_auto && o->subframes < 1)
-      o->subframes = 1;
+   o->target            = settings->uints.video_framegen_target == 60 ? 1 : 0;
    o->method  = settings->uints.video_framegen_method % 3;
    o->cadence = settings->uints.video_framegen_cadence % 5;
    o->size    = settings->uints.video_framegen_size % 4;
@@ -118,16 +121,15 @@ void ps5_fg_menu_step(const char *label, int direction)
    before = now;
    ps5_fg_step(&now, (unsigned)item, direction);
    settings->bools.video_framegen         = now.enable != 0;
-   settings->bools.video_framegen_auto    = now.subframes == 0;
-   if (now.subframes)
-      settings->uints.video_shader_subframes = now.subframes;
+   settings->bools.video_framegen_auto    = true;
+   settings->uints.video_framegen_target  = now.target ? 60 : 120;
    settings->uints.video_framegen_method  = now.method;
    settings->uints.video_framegen_cadence = now.cadence;
    settings->uints.video_framegen_size    = now.size;
    settings->bools.video_framegen_osd     = now.osd != 0;
    ps5_fg_save(&now);
    /* The rate is read when the video output starts: its timing follows it */
-   if (now.subframes != before.subframes)
+   if (now.target != before.target)
       command_event(CMD_EVENT_REINIT, NULL);   /* (Auto picks its rate as the video output starts) */
 }
 
@@ -176,11 +178,13 @@ void ps5_fg_menu_help(const char *label, char *s, size_t len)
 
 /* The driver calls this for every present; the message is refreshed about twice a second */
 void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, unsigned height,
-      unsigned long generated)
+      unsigned long generated, unsigned long unique)
 {
    static unsigned calls;
+   const unsigned pictures = subframes / (ps5_fg_dup ? ps5_fg_dup : 1);
    static unsigned long presents, last_generated;
-   static unsigned long gap_n[2], gap_off[2];
+   static unsigned long gap_n[2], gap_off[2], last_unique;
+   static double new_per_s;
    static double gap_sum[2], gap_max[2];
    static struct timespec last;
    struct ps5_fg_options now;
@@ -191,6 +195,26 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
       return;
    presents++;
    clock_gettime(CLOCK_MONOTONIC, &t);
+   {
+      /* the last presents: instant shown and ms since the one before (a line with the pace) */
+      static float seq_t[24];
+      static float seq_ms[24];
+      static unsigned seq_n;
+      static struct timespec seq_prev;
+      if (seq_prev.tv_sec)
+         seq_ms[seq_n % 24] = (float)((t.tv_sec - seq_prev.tv_sec) * 1e3 + (t.tv_nsec - seq_prev.tv_nsec) / 1e6);
+      seq_t[seq_n % 24] = ps5_fg_dbg_t;
+      seq_prev          = t;
+      seq_n++;
+      if (seq_n % 240 == 0)
+      {
+         char line[400];
+         unsigned q, o = 0;
+         for (q = 0; q < 24 && o < sizeof(line) - 24; q++)
+            o += (unsigned)snprintf(line + o, sizeof(line) - o, " %.2f@%.1f", seq_t[(seq_n + q) % 24], seq_ms[(seq_n + q) % 24]);
+         RARCH_LOG("[FrameGen] seq:%s\n", line);
+      }
+   }
    if (last.tv_sec == 0)
       last = t;
    {
@@ -214,8 +238,10 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
    if ((t.tv_sec - last.tv_sec) * 1000000000L + (t.tv_nsec - last.tv_nsec) >= 2000000000L)
    {
       double seconds = (double)(t.tv_sec - last.tv_sec) + (double)(t.tv_nsec - last.tv_nsec) / 1e9;
-      RARCH_LOG("[FrameGen] pace: %.1f presents/s, %.1f generated/s\n", (double)presents / seconds,
-            (double)(generated - last_generated) / seconds);
+      new_per_s = (double)(unique - last_unique) / seconds;
+      last_unique = unique;
+      RARCH_LOG("[FrameGen] pace: %.1f presents/s, %.1f generated/s, %.1f new frames/s\n", (double)presents / seconds,
+            (double)(generated - last_generated) / seconds, new_per_s);
       RARCH_LOG("[FrameGen] spacing (ms): real n %lu mean %.2f max %.2f off %lu | generated n %lu mean %.2f max %.2f off %lu\n",
             gap_n[0], gap_n[0] ? gap_sum[0] / (double)gap_n[0] : 0.0, gap_max[0], gap_off[0],
             gap_n[1], gap_n[1] ? gap_sum[1] / (double)gap_n[1] : 0.0, gap_max[1], gap_off[1]);
@@ -230,15 +256,15 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
    ps5_fg_current(&now);
    if (!now.enable)
       snprintf(text, sizeof(text), "FrameGen: off");
-   else if (subframes < 2)
-      snprintf(text, sizeof(text), "FrameGen: waiting - the output rate is not a multiple of the game's (Output Rate %s)",
-            ps5_fg_choice_name(PS5_FG_SUBFRAMES, now.subframes));
+   else if (pictures < 2)
+      snprintf(text, sizeof(text), "FrameGen: nothing to make - the game already runs at the Target Framerate (%s)",
+            ps5_fg_choice_name(PS5_FG_TARGET, now.target));
    else if (!plan)
       snprintf(text, sizeof(text), "FrameGen: paused (menu, fast-forward or pause)");
    else
-      snprintf(text, sizeof(text), "FrameGen: %s  %ux  cadence %u%s  %ux%u  generated %lu",
-            ps5_fg_choice_name(PS5_FG_METHOD, now.method), subframes, period ? period : 1,
-            now.cadence ? " (forced)" : "", width, height, generated);
+      snprintf(text, sizeof(text), "FrameGen: %s  game %.1f fps (%.1f new/s) -> %.0f fps  cadence %u%s  %ux%u  generated %lu",
+            ps5_fg_choice_name(PS5_FG_METHOD, now.method), (double)ps5_fg_core_fps, new_per_s, (double)ps5_fg_target_fps,
+            period ? period : 1, now.cadence ? " (forced)" : "", width, height, generated);
    runloop_msg_queue_push(text, strlen(text), 1, 150, false, NULL,
          MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
 }

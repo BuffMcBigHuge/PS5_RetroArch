@@ -21,7 +21,7 @@
 enum ps5_fg_item
 {
     PS5_FG_ENABLE = 0,
-    PS5_FG_SUBFRAMES,
+    PS5_FG_TARGET,
     PS5_FG_METHOD,
     PS5_FG_CADENCE,
     PS5_FG_SIZE,
@@ -33,7 +33,7 @@ enum ps5_fg_item
 struct ps5_fg_options
 {
     unsigned enable;    /* 0 off, 1 on */
-    unsigned subframes; /* presents per content frame, 1 (nothing generated) to 4 */
+    unsigned target;    /* 0 120 fps, 1 60 fps: the rate of the pictures the display gets */
     unsigned method;    /* 0 neural, 1 blend, 2 repeat */
     unsigned cadence;   /* 0 measured, else core frames per new frame, 1 to 4 */
     unsigned size;      /* 0 4K, 1 1440p, 2 1080p, 3 720p: the most pixels the generator works at */
@@ -47,8 +47,8 @@ static inline unsigned ps5_fg_choice_count(unsigned item)
     case PS5_FG_ENABLE:
     case PS5_FG_OSD:
         return 2;
-    case PS5_FG_SUBFRAMES:
-        return 5;
+    case PS5_FG_TARGET:
+        return 2;
     case PS5_FG_METHOD:
         return 3;
     case PS5_FG_CADENCE:
@@ -63,7 +63,7 @@ static inline unsigned ps5_fg_choice_count(unsigned item)
 static inline const char *ps5_fg_item_name(unsigned item)
 {
     static const char *const names[PS5_FG_ITEM_COUNT] = {
-        "Frame Generation",       "Output Rate",  "Method",
+        "Frame Generation",       "Target Framerate",  "Method",
         "Content Frame Cadence",  "Working Size", "Status On Screen",
         "Recommended Settings",
     };
@@ -73,15 +73,15 @@ static inline const char *ps5_fg_item_name(unsigned item)
 static inline const char *ps5_fg_item_help(unsigned item)
 {
     static const char *const help[PS5_FG_ITEM_COUNT] = {
-        "Makes the frames between a game's frames with a trained network. Needs Output Rate 2x or more.",
-        "Presents per game frame. Auto picks the display's rate over the game's (2x for 60 fps games on a 120 Hz output). "
-        "A rate the display cannot show makes the game run slow. Changing it restarts the video output.",
+        "Makes the frames between a game's frames with a trained network, up to the Target Framerate.",
+        "The frame rate of what you see. 120: a 60 fps game gets one made frame between each pair (30 fps games, three). "
+        "60: a 30 fps game gets one; a 60 fps game is shown as it is. Changing it restarts the video output.",
         "Neural is the trained network. Blend and Repeat are the baselines to compare it with.",
         "Auto measures how often a game makes a new frame. Force 1 to 4 when a game's cadence is "
         "misjudged (30 fps games: 2).",
         "The most pixels the generator works at. Games that render larger are averaged down. Smaller is faster.",
         "Shows the method, the rate, the frame size and a count of generated frames over the game.",
-        "Frame generation on, rate auto, neural, auto cadence, up to 4K, status off.",
+        "Frame generation on, 120 fps, neural, auto cadence, up to 4K, status off.",
     };
     return item < PS5_FG_ITEM_COUNT ? help[item] : "";
 }
@@ -90,7 +90,7 @@ static inline const char *ps5_fg_item_help(unsigned item)
 static inline const char *ps5_fg_choice_name(unsigned item, unsigned value)
 {
     static const char *const on_off[] = {"Off", "On"};
-    static const char *const rates[] = {"Auto", "Off (1x)", "2x", "3x", "4x"};
+    static const char *const rates[] = {"120 fps", "60 fps"};
     static const char *const methods[] = {"Neural", "Blend", "Repeat"};
     static const char *const cadence[] = {"Auto", "1", "2", "3", "4"};
     static const char *const sizes[] = {"Up to 4K", "Up to 1440p", "Up to 1080p", "Up to 720p"};
@@ -99,8 +99,8 @@ static inline const char *ps5_fg_choice_name(unsigned item, unsigned value)
     case PS5_FG_ENABLE:
     case PS5_FG_OSD:
         return on_off[value & 1];
-    case PS5_FG_SUBFRAMES:
-        return value < 5 ? rates[value] : "";
+    case PS5_FG_TARGET:
+        return value < 2 ? rates[value] : "";
     case PS5_FG_METHOD:
         return value < 3 ? methods[value] : "";
     case PS5_FG_CADENCE:
@@ -115,20 +115,20 @@ static inline const char *ps5_fg_choice_name(unsigned item, unsigned value)
 static inline void ps5_fg_defaults(struct ps5_fg_options *o)
 {
     o->enable = 1;
-    o->subframes = 0;
+    o->target = 0;
     o->method = 0;
     o->cadence = 0;
     o->size = 0;
     o->osd = 0;
 }
 
-/* An item's value as its choice index (subframes 1..4 are choices 0..3). */
+/* An item's value as its choice index. */
 static inline unsigned ps5_fg_get(const struct ps5_fg_options *o, unsigned item)
 {
     switch (item)
     {
     case PS5_FG_ENABLE: return o->enable;
-    case PS5_FG_SUBFRAMES: return o->subframes <= 4 ? o->subframes : 0;
+    case PS5_FG_TARGET: return o->target ? 1 : 0;
     case PS5_FG_METHOD: return o->method;
     case PS5_FG_CADENCE: return o->cadence;
     case PS5_FG_SIZE: return o->size;
@@ -148,7 +148,7 @@ static inline void ps5_fg_set(struct ps5_fg_options *o, unsigned item, unsigned 
     switch (item)
     {
     case PS5_FG_ENABLE: o->enable = value; break;
-    case PS5_FG_SUBFRAMES: o->subframes = value; break;
+    case PS5_FG_TARGET: o->target = value; break;
     case PS5_FG_METHOD: o->method = value; break;
     case PS5_FG_CADENCE: o->cadence = value; break;
     case PS5_FG_SIZE: o->size = value; break;
@@ -182,8 +182,8 @@ static inline int ps5_fg_save(const struct ps5_fg_options *o)
     if (!file)
         return -1;
     fprintf(file, "video_framegen = \"%s\"\n", o->enable ? "true" : "false");
-    fprintf(file, "video_framegen_auto = \"%s\"\n", o->subframes == 0 ? "true" : "false");
-    fprintf(file, "video_shader_subframes = \"%u\"\n", o->subframes ? o->subframes : 2);
+    fprintf(file, "video_framegen_auto = \"true\"\n");
+    fprintf(file, "video_framegen_target = \"%u\"\n", o->target ? 60 : 120);
     fprintf(file, "video_framegen_method = \"%u\"\n", o->method);
     fprintf(file, "video_framegen_cadence = \"%u\"\n", o->cadence);
     fprintf(file, "video_framegen_size = \"%u\"\n", o->size);
@@ -195,8 +195,6 @@ static inline int ps5_fg_save(const struct ps5_fg_options *o)
 static inline void ps5_fg_load(struct ps5_fg_options *o)
 {
     char line[160];
-    unsigned rate = o->subframes;
-    int auto_rate = o->subframes == 0;
     FILE *file = fopen(PS5_FG_CONFIG_PATH, "r");
     if (!file)
         return;
@@ -220,15 +218,14 @@ static inline void ps5_fg_load(struct ps5_fg_options *o)
             o->size = number % 4;
         else if (strstr(line, "video_framegen_osd"))
             o->osd = strncmp(value, "true", 4) == 0;
+        else if (strstr(line, "video_framegen_target"))
+            o->target = number == 60;
         else if (strstr(line, "video_framegen_auto"))
-            auto_rate = strncmp(value, "true", 4) == 0;
+            continue;   /* (older files: the rate is the target's now) */
         else if (strstr(line, "video_framegen"))
             o->enable = strncmp(value, "true", 4) == 0;
-        else if (strstr(line, "video_shader_subframes"))
-            rate = number >= 1 && number <= 4 ? number : 2;
     }
     fclose(file);
-    o->subframes = auto_rate ? 0 : rate;
 }
 
 #endif

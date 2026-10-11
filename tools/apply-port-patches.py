@@ -4426,6 +4426,130 @@ EDITS += [('configuration.h',
   '   bool video_adaptive_vsync              = settings->bools.video_adaptive_vsync;\n',
   'Output Rate Auto: the presents per game frame')]
 
+# Frame generation, Target Framerate (patches/series, 0121): the rate of the pictures the display gets, 60 or 120. The
+# display runs at its own rate (119.88 Hz on this console); a target below it shows each picture "dup" times, the
+# presents of one picture being copies. shader_subframes is the presents per game frame: pictures x dup.
+EDITS += [('configuration.h',
+  '      unsigned video_framegen_cadence; /* patches/series, 0120: 0 measured, else core frames per new frame */\n',
+  '      unsigned video_framegen_cadence; /* patches/series, 0120: 0 measured, else core frames per new frame */\n'
+  '      unsigned video_framegen_target; /* patches/series, 0121: Target Framerate, 60 or 120 */\n',
+  'unsigned video_framegen_target; /* patches/series, 0121'),
+ ('configuration.c',
+  '   SETTING_UINT("video_framegen_cadence", &settings->uints.video_framegen_cadence, true, 0, false); /* '
+  'patches/series, 0120 */\n',
+  '   SETTING_UINT("video_framegen_cadence", &settings->uints.video_framegen_cadence, true, 0, false); /* '
+  'patches/series, 0120 */\n'
+  '   SETTING_UINT("video_framegen_target", &settings->uints.video_framegen_target, true, 120, false); /* '
+  'patches/series, 0121 */\n',
+  'SETTING_UINT("video_framegen_target"'),
+ ('retroarch.c',
+  '      float n       = display / (float)input_fps;\n'
+  '      unsigned s    = n < 1.5f ? 1 : n < 2.5f ? 2 : n < 3.5f ? 3 : 4;\n'
+  '      RARCH_LOG("[FrameGen] Output Rate Auto: display %.3f Hz, game %.3f fps -> %ux\\n", display, '
+  'input_fps, s);\n'
+  '      settings->uints.video_shader_subframes = s;\n',
+  '      /* patches/series, 0121: Target Framerate. The pictures the display gets per second are the target (60 or\n'
+  '       * 120); a display at a multiple of it shows each picture that many times (dup). */\n'
+  '      {\n'
+  '         extern unsigned ps5_fg_dup;\n'
+  '         const float target = settings->uints.video_framegen_target == 60 ? 59.94f : 119.88f;\n'
+  '         unsigned dup       = (unsigned)(display / target + 0.5f);\n'
+  '         float n;\n'
+  '         unsigned s;\n'
+  '         if (dup < 1)\n'
+  '            dup = 1;\n'
+  '         n = (display / (float)dup) / (float)input_fps;\n'
+  '         s = n < 1.5f ? 1 : n < 2.5f ? 2 : n < 3.5f ? 3 : 4;\n'
+  '         if (s * dup > 4)\n'
+  '            s = 4 / dup > 0 ? 4 / dup : 1;\n'
+  '         ps5_fg_dup = dup;\n'
+  '         RARCH_LOG("[FrameGen] Target Framerate %.0f: display %.3f Hz, game %.3f fps -> %ux, each shown %ux\\n", '
+  'target, display, input_fps, s, dup);\n'
+  '         settings->uints.video_shader_subframes = s * dup;\n'
+  '      }\n',
+  'Target Framerate. The pictures the display gets per second'),
+ ('gfx/drivers/vulkan.c',
+  '            const unsigned fg_n  = video_info->shader_subframes;\n'
+  '            const unsigned fg_j  = fg_nested ? vk->framegen_subframe : 1;\n',
+  '            /* patches/series, 0121: presents per game frame fg_s = pictures fg_n x copies of each (Target Framerate) */\n'
+  '            extern unsigned ps5_fg_dup;\n'
+  '            const unsigned fg_s   = video_info->shader_subframes;\n'
+  '            const unsigned fg_dup = ps5_fg_dup >= 1 && fg_s % ps5_fg_dup == 0 ? ps5_fg_dup : 1;\n'
+  '            const unsigned fg_n   = fg_s / fg_dup;\n'
+  '            const unsigned fg_j   = ((fg_nested ? vk->framegen_subframe : 1) - 1) / fg_dup + 1;\n',
+  'presents per game frame fg_s = pictures fg_n'),
+]
+
+# Frame generation, the timeline (patches/series, 0121): the pictures of a group are placed at the instants the target
+# rate puts them at, the presents of each call vary, and the game is never run faster or slower to fit a multiple.
+EDITS += [('gfx/drivers/vulkan.c',
+  "   unsigned framegen_period;     /* calls in a group: 1, or 2 for a game at half the core's rate */\n",
+  "   unsigned framegen_period;     /* calls in a group: 1, or 2 for a game at half the core's rate */\n   unsigned framegen_presents;   /* presents of this call (patches/series, 0121: the timeline) */\n",
+  'unsigned framegen_presents;   /* presents of this call'),
+ ('gfx/drivers/vulkan.c',
+  '   vulkan_filter_chain_t *filter_chain           = NULL;\n   bool waits_for_semaphores                     = false;\n',
+  '   if (!(vk->context->flags & VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK))\n      vk->framegen_presents = video_info->shader_subframes; /* patches/series, 0121: presents of this call */\n'
+  '   vulkan_filter_chain_t *filter_chain           = NULL;\n   bool waits_for_semaphores                     = false;\n',
+  'presents of this call */\n'),
+ ('gfx/drivers/vulkan.c',
+  '                     (fg_n >= 2 && fg_n <= 4)\n',
+  '                     (fg_s >= 2 && fg_s <= 8) /* patches/series, 0121 */\n',
+  '(fg_s >= 2 && fg_s <= 8) /* patches/series, 0121 */'),
+ ('gfx/drivers/vulkan.c',
+  '                     vk->framegen_call       = 0;\n                     vk->framegen_group_open = true;\n',
+  '                     vk->framegen_call       = 0;\n                     vk->framegen_group_open = true;\n                     {\n                        /* patches/series, 0121: the pictures of the group, at the instants of the target rate */\n                        extern float ps5_fg_core_fps, ps5_fg_target_fps;\n                        vk_framegen_begin_group(vk->framegen, vk->framegen_period ? vk->framegen_period : 1,\n                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup);\n                     }\n',
+  'vk_framegen_begin_group(vk->framegen'),
+ ('gfx/drivers/vulkan.c',
+  "               /* The present's place in the group */\n               const unsigned fg_total = (vk->framegen_period ? vk->framegen_period : 1) * fg_n;\n               bool fg_shown_generated = false;\n               const unsigned fg_place = vk->framegen_call * fg_n + fg_j;\n               if (fg_place < fg_total)\n               {\n                  if (vk_framegen_generate(vk->framegen, vk->cmd, frame_index,\n                           (float)fg_place / (float)fg_total, &vk->framegen_frame))\n                  {\n                     input.image  = vk->framegen_frame.image;\n                     input.view   = vk->framegen_frame.view;\n                     input.layout = vk->framegen_frame.layout;\n                     input.width  = vk->framegen_frame.width;\n                     input.height = vk->framegen_frame.height;\n                     input.format = vk->framegen_frame.format;\n                     input.physical_width = vk->framegen_frame.width;\n                     fg_shown_generated   = true;\n                  }\n               }\n               else if (fg_place == fg_total)\n                  vk_framegen_commit(vk->framegen);\n",
+  "               /* The present's place in the call (patches/series, 0121: the timeline of the Target Framerate) */\n               bool fg_shown_generated = false;\n               bool fg_final           = false;\n               float fg_t              = 0.0f;\n               if (!fg_nested)\n                  vk->framegen_presents = vk_framegen_call_presents(vk->framegen, vk->framegen_call);\n               if (   vk_framegen_picture(vk->framegen, vk->framegen_call, fg_nested ? vk->framegen_subframe : 1,\n                        vk->framegen_presents, &fg_t, &fg_final)\n                   && vk_framegen_generate(vk->framegen, vk->cmd, frame_index, fg_t, &vk->framegen_frame))\n               {\n                  input.image  = vk->framegen_frame.image;\n                  input.view   = vk->framegen_frame.view;\n                  input.layout = vk->framegen_frame.layout;\n                  input.width  = vk->framegen_frame.width;\n                  input.height = vk->framegen_frame.height;\n                  input.format = vk->framegen_frame.format;\n                  input.physical_width = vk->framegen_frame.width;\n                  fg_shown_generated   = true;\n               }\n               if (fg_final)\n                  vk_framegen_commit(vk->framegen);\n",
+  'vk_framegen_call_presents(vk->framegen, vk->framegen_call)'),
+ ('gfx/drivers/vulkan.c',
+  '   if (      (video_info->shader_subframes > 1)\n         &&  (backbuffer->image != VK_NULL_HANDLE)\n         &&  (vk->context->flags & VK_CTX_FLAG_HAS_ACQUIRED_SWAPCHAIN)\n         &&  !black_frame_insertion\n         &&  !input_driver_nonblock_state\n         &&  !runloop_is_slowmotion\n         &&  !runloop_is_paused\n         &&  (!(vk->flags & VK_FLAG_MENU_ENABLE))\n         &&  !(vk->context->swap_interval > 1)\n         &&  (!(vk->context->flags & VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK)))\n   {\n      vk->context->flags |= VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK;\n      for (j = 1; j < (int) video_info->shader_subframes; j++)\n',
+  '   if (      (vk->framegen_presents > 1) /* patches/series, 0121: the presents of this call */\n         &&  (backbuffer->image != VK_NULL_HANDLE)\n         &&  (vk->context->flags & VK_CTX_FLAG_HAS_ACQUIRED_SWAPCHAIN)\n         &&  !black_frame_insertion\n         &&  !input_driver_nonblock_state\n         &&  !runloop_is_slowmotion\n         &&  !runloop_is_paused\n         &&  (!(vk->flags & VK_FLAG_MENU_ENABLE))\n         &&  !(vk->context->swap_interval > 1)\n         &&  (!(vk->context->flags & VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK)))\n   {\n      vk->context->flags |= VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK;\n      for (j = 1; j < (int) vk->framegen_presents; j++)\n',
+  '(vk->framegen_presents > 1) /* patches/series, 0121'),
+ ('gfx/drivers/vulkan.c',
+  '         &&  !(video_info->shader_subframes > 1)\n         &&  !black_frame_insertion\n         &&  (!(vk->context->flags & VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK)))\n',
+  '         &&  !(vk->framegen_presents > 1) /* patches/series, 0121 */\n         &&  !black_frame_insertion\n         &&  (!(vk->context->flags & VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK)))\n',
+  '!(vk->framegen_presents > 1) /* patches/series, 0121 */'),
+ ('gfx/drivers/vulkan.c',
+  'extern void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, unsigned height,\n      unsigned long generated);\n',
+  'extern void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, unsigned height,\n      unsigned long generated, unsigned long unique); /* patches/series, 0121: and the new frames held */\n',
+  'unsigned long generated, unsigned long unique); /* patches/series, 0121'),
+ ('gfx/drivers/vulkan.c',
+  '               video_info->shader_subframes, vk->framegen_period, fg_w, fg_h, fg_n_made);\n',
+  '               video_info->shader_subframes, vk->framegen_period, fg_w, fg_h, fg_n_made, vk_framegen_unique(vk->framegen)); /* patches/series, 0121 */\n',
+  'fg_n_made, vk_framegen_unique(vk->framegen)); /* patches/series, 0121 */'),
+ ('retroarch.c',
+  '      /* patches/series, 0121: Target Framerate. The pictures the display gets per second are the target (60 or\n       * 120); a display at a multiple of it shows each picture that many times (dup). */\n      {\n         extern unsigned ps5_fg_dup;\n         const float target = settings->uints.video_framegen_target == 60 ? 59.94f : 119.88f;\n         unsigned dup       = (unsigned)(display / target + 0.5f);\n         float n;\n         unsigned s;\n         if (dup < 1)\n            dup = 1;\n         n = (display / (float)dup) / (float)input_fps;\n         s = n < 1.5f ? 1 : n < 2.5f ? 2 : n < 3.5f ? 3 : 4;\n         if (s * dup > 4)\n            s = 4 / dup > 0 ? 4 / dup : 1;\n         ps5_fg_dup = dup;\n         RARCH_LOG("[FrameGen] Target Framerate %.0f: display %.3f Hz, game %.3f fps -> %ux, each shown %ux\\n", target, display, input_fps, s, dup);\n         settings->uints.video_shader_subframes = s * dup;\n      }\n',
+  '      /* patches/series, 0121: Target Framerate. The pictures the display gets per second are the target (60 or\n       * 120); a display at a multiple of it shows each picture that many times (dup). The game\'s rate is never\n       * changed to fit: the number of pictures per game frame varies (the driver places each at its instant), and\n       * the presents set here are the nominal ones, the pacing the runloop assumes. */\n      {\n         extern unsigned ps5_fg_dup;\n         extern float ps5_fg_target_fps;\n         const float target = settings->uints.video_framegen_target == 60 ? 59.94f : 119.88f;\n         unsigned dup       = (unsigned)(display / target + 0.5f);\n         unsigned s;\n         if (dup < 1)\n            dup = 1;\n         s = (unsigned)(target / (float)input_fps + 0.5f);\n         if (input_fps > target * 1.06f || s < 1)\n         {\n            /* the game is already faster than the target: nothing to make */\n            s   = 1;\n            dup = 1;\n         }\n         if (s * dup > 8)\n            s = 8 / dup > 0 ? 8 / dup : 1;\n         /* the nominal rate must not be below the game\'s, or the runloop would not sync to the display */\n         if (s > 1 && display / (float)(s * dup) < (float)input_fps * 0.95f)\n            s--;\n         ps5_fg_dup        = dup;\n         ps5_fg_target_fps = target;\n         RARCH_LOG("[FrameGen] Target Framerate %.0f: display %.3f Hz, game %.3f fps -> %.2f pictures per game frame, "\n               "each shown %ux\\n", target, display, input_fps, (double)target / (double)input_fps, dup);\n         settings->uints.video_shader_subframes = s * dup;\n      }\n',
+  'the nominal ones, the pacing the runloop assumes'),
+ ('retroarch.c',
+  '                  shader_subframes,\n                  audio_max_timing_skew);\n',
+  '                  shader_subframes,\n                  /* patches/series, 0121: the core runs at its own rate (the driver places the pictures), so the audio is not retimed */\n                  (settings->bools.video_framegen && settings->bools.video_framegen_auto && fabsf((settings->uints.video_framegen_target == 60 ? 59.94f : 119.88f) / (float)input_fps - floorf((settings->uints.video_framegen_target == 60 ? 59.94f : 119.88f) / (float)input_fps + 0.5f)) > 0.02f * ((settings->uints.video_framegen_target == 60 ? 59.94f : 119.88f) / (float)input_fps)) ? 0.0f : audio_max_timing_skew);\n',
+  'so the audio is not retimed')]
+
+# Frame generation, any cadence (patches/series, 0121): the last gap between new frames predicts the next, and a gap that
+# differs is not a reason to stop generating (a game that steps its animation unevenly would be left at the game's own rate).
+EDITS += [('gfx/drivers/vulkan.c',
+  '                        if (fg_gap == vk->framegen_last_gap && fg_gap >= 1 && fg_gap <= 4)\n'
+  '                           vk->framegen_period = fg_gap;\n',
+  '                        if (fg_gap >= 1 && fg_gap <= 8) /* patches/series, 0121: the last gap predicts the next */\n'
+  '                           vk->framegen_period = fg_gap;\n',
+  'the last gap predicts the next */'),
+ ('gfx/drivers/vulkan.c',
+  '                        if (fg_gap != (vk->framegen_period ? vk->framegen_period : 1))\n'
+  '                           vk_framegen_invalidate(vk->framegen);\n',
+  '                        if (fg_gap > 8) /* patches/series, 0121: only a pause or a cut breaks the sequence */\n'
+  '                           vk_framegen_invalidate(vk->framegen);\n',
+  'only a pause or a cut breaks the sequence */')]
+
+# Frame generation, the sequence of presents in the status log (patches/series, 0121)
+EDITS += [('gfx/drivers/vulkan.c',
+  '               if (fg_final)\n                  vk_framegen_commit(vk->framegen);\n',
+  '               { extern float ps5_fg_dbg_t; ps5_fg_dbg_t = fg_shown_generated ? fg_t : 1.0f; } /* patches/series, 0121 */\n'
+  '               if (fg_final)\n                  vk_framegen_commit(vk->framegen);\n',
+  'ps5_fg_dbg_t = fg_shown_generated ? fg_t : 1.0f; } /* patches/series, 0121 */')]
+
 # Changes that are withdrawn rather than deleted, by marker.
 #
 # An entry here names an insertion this driver no longer needs, and the
