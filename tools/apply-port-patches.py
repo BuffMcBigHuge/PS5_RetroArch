@@ -4583,6 +4583,38 @@ EDITS += [('gfx/video_driver.c',
   '         }\n',
   'Base %.1f | FrameGen %.1f')]
 
+
+# The statistics overlay (the left of the screen): the game's rate and the rate with frames generated, named (patches/series, 0121)
+EDITS += [('gfx/video_driver.c',
+  '      audio_compute_buffer_statistics(&audio_stats);\n',
+  '      audio_compute_buffer_statistics(&audio_stats);\n'
+  '      /* patches/series, 0121: Frame Rate is the game\'s own rate; with frame generation on, FrameGen is the rate shown */\n'
+  '      extern int ps5_fg_active;\n'
+  '      extern float ps5_fg_base_fps;\n'
+  '      const char *ps5_rate_label  = ps5_fg_active ? "Base Rate: " : "Frame Rate:";\n'
+  '      const float ps5_rate_base   = (ps5_fg_active && ps5_fg_base_fps > 0.0f) ? ps5_fg_base_fps : last_fps;\n'
+  '      char ps5_rate_fg[32];\n'
+  '      if (ps5_fg_active)\n'
+  '         snprintf(ps5_rate_fg, sizeof(ps5_rate_fg), "%7.2f fps", last_fps);\n'
+  '      else\n'
+  '         snprintf(ps5_rate_fg, sizeof(ps5_rate_fg), "%s", "    off");\n',
+  'const char *ps5_rate_label'),
+ ('gfx/video_driver.c',
+  '               " Frame Rate:%7.2f fps\\n"\n',
+  '               " %s%7.2f fps\\n"\n               " FrameGen:  %s\\n"\n',
+  '" FrameGen:  %s\\n"'),
+ ('gfx/video_driver.c',
+  '               video_info.refresh_rate,\n               last_fps,\n',
+  '               video_info.refresh_rate,\n               ps5_rate_label,\n               ps5_rate_base,\n               ps5_rate_fg,\n',
+  'ps5_rate_label,\n               ps5_rate_base,')]
+
+
+# Hardcore mode is off unless the owner turns it on: it forbids loading save states (patches/series, 0121)
+EDITS += [('configuration.c',
+  '   SETTING_BOOL("cheevos_hardcore_mode_enable",  &settings->bools.cheevos_hardcore_mode_enable, true, true, false);\n',
+  '   SETTING_BOOL("cheevos_hardcore_mode_enable",  &settings->bools.cheevos_hardcore_mode_enable, true, false, false); /* patches/series, 0121: off by default */\n',
+  'cheevos_hardcore_mode_enable, true, false, false); /* patches/series, 0121')]
+
 # Changes that are withdrawn rather than deleted, by marker.
 #
 # An entry here names an insertion this driver no longer needs, and the
