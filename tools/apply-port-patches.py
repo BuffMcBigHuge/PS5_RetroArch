@@ -35,6 +35,29 @@ from pathlib import Path
 # (file, anchor, inserted-before-anchor, already-present-marker)
 EDITS = [
     (
+        "menu/drivers/xmb.c",
+        "         /* If the playlist icon doesn't exist return default */\n"
+        "         if (!path_is_valid(texturepath))\n",
+        "         /* patches/series, 0118: a playlist named otherwise (\"PS2\", \"Nintendo 3DS\")\n"
+        "          * gets its system's icon, named by database (tools/xmb-system-icons.py). */\n"
+        "         if (!path_is_valid(texturepath))\n"
+        "         {\n"
+        "            extern const char *ps5_library_platform(const char *name);\n"
+        "            extern const char *ps5_library_platform_database(const char *id);\n"
+        "            const char *system_db = ps5_library_platform_database(\n"
+        "                  ps5_library_platform(sysname));\n"
+        "            if (system_db)\n"
+        "            {\n"
+        "               __len = fill_pathname_join_special(texturepath, iconpath, system_db,\n"
+        "                     sizeof(texturepath));\n"
+        "               strlcpy(texturepath + __len, \".png\", sizeof(texturepath) - __len);\n"
+        "            }\n"
+        "         }\n"
+        "         /* If the playlist icon doesn't exist return default */\n"
+        "         if (!path_is_valid(texturepath))\n",
+        "patches/series, 0118: a playlist named otherwise",
+    ),
+    (
         "network/netplay/netplay_frontend.c",
         "               /* Problem! */\n               if (buffer[1] != local_crc)\n",
         "               /* patches/series, 0117: trace received state comparisons. */\n"
@@ -3726,6 +3749,208 @@ EDITS += [
     ('menu/cbs/menu_cbs_ok.c', '   /* patches/series, 0115: WebUI action binding */\n   if (string_is_equal(label, "ps5_webui"))\n   {\n      BIND_ACTION_OK(cbs, action_ok_ps5_webui);\n      return 0;\n   }\n   BIND_ACTION_OK(cbs, action_ok_lookup_setting);', '   /* patches/series, 0115: WebUI action binding; moved by 0116 to the entry initializer. */\n      BIND_ACTION_OK(cbs, action_ok_lookup_setting);', 'moved by 0116 to the entry initializer'),
     ('menu/cbs/menu_cbs_ok.c', '   BIND_ACTION_OK(cbs, action_ok_lookup_setting);\n\n   if (menu_cbs_init_bind_ok_compare_label(cbs, label) == 0)', '   /* patches/series, 0116: WebUI entry action */\n   if (string_is_equal(label, "ps5_webui"))\n   {\n      BIND_ACTION_OK(cbs, action_ok_ps5_webui);\n      return 0;\n   }\n   BIND_ACTION_OK(cbs, action_ok_lookup_setting);\n\n   if (menu_cbs_init_bind_ok_compare_label(cbs, label) == 0)', 'patches/series, 0116: WebUI entry action'),
 ]
+
+# Frame generation (patches/series, 0119): the network's frames between a content frame and the last,
+# shown by the driver's shader subframes (PS5_FrameGen, integrations/retroarch).
+EDITS += [('gfx/drivers/vulkan.c',
+  '#include "../common/vulkan_common.h"\n',
+  '#include "../common/vulkan_common.h"\n'
+  '/* patches/series, 0119: frame generation */\n'
+  '#include <file/file_path.h>\n'
+  '#include "vulkan_framegen.h"\n',
+  'patches/series, 0119: frame generation'),
+ ('gfx/drivers/vulkan.c',
+  'typedef struct vk\n{\n',
+  'typedef struct vk\n'
+  '{\n'
+  '   /* patches/series, 0119: the frame generator, and what the first present of a content frame shows */\n'
+  '   vk_framegen_t *framegen;\n'
+  '   struct vk_framegen_frame framegen_frame;\n'
+  '   bool framegen_failed;\n'
+  '   bool framegen_plan;           /* all the presents of the call follow */\n'
+  '   bool framegen_group_open;     /* a new frame has started a group of calls */\n'
+  '   unsigned framegen_subframe;   /* the present within the call, from 1 */\n'
+  '   unsigned framegen_call;       /* the call within the group, from 0 */\n'
+  "   unsigned framegen_period;     /* calls in a group: 1, or 2 for a game at half the core's rate */\n"
+  '   unsigned framegen_last_gap;   /* the last measured gap between new frames, in calls */\n'
+  '   uint8_t *framegen_last;       /* the last new software frame, to tell a repeat */\n'
+  '   size_t framegen_last_bytes;\n'
+  '   size_t framegen_last_pitch;\n',
+  'patches/series, 0119: the frame generator'),
+ ('gfx/drivers/vulkan.c',
+  '      if (vk->filter_chain)\n'
+  '         vulkan_filter_chain_free((vulkan_filter_chain_t*)vk->filter_chain);\n',
+  '      /* patches/series, 0119: free the frame generator */\n'
+  '      if (vk->framegen)\n'
+  '         vk_framegen_free(vk->framegen);\n'
+  '      vk->framegen = NULL;\n'
+  '      free(vk->framegen_last);\n'
+  '      vk->framegen_last = NULL;\n'
+  '\n'
+  '      if (vk->filter_chain)\n'
+  '         vulkan_filter_chain_free((vulkan_filter_chain_t*)vk->filter_chain);\n',
+  'patches/series, 0119: free the frame generator'),
+ ('gfx/drivers/vulkan.c',
+  '      vulkan_filter_chain_set_input_texture((vulkan_filter_chain_t*)\n'
+  '            filter_chain, &input);\n',
+  '      /* patches/series, 0119: with N shader subframes (2 to 4) the presents of a content frame show the '
+  'frames\n'
+  '       * between the previous content frame and this one, and then this one. A game that runs at half '
+  'the\n'
+  "       * core's rate hands the driver every frame twice (or hands it nothing, when the core can "
+  'duplicate\n'
+  '       * frames): a content frame that is a repeat belongs to the group its new frame started, and the\n'
+  '       * frames made span the whole group. With P calls in a group, the presents of the group are P * N,\n'
+  '       * and the j-th shows the frame j/(P*N) of the way, the last this one. The group length P is the\n'
+  '       * measured gap between new frames, taken once two gaps agree. Only when every present of the call\n'
+  '       * will follow (the conditions of the subframe loop below); otherwise the history is dropped, so\n'
+  '       * no frame is made across a gap. */\n'
+  '      {\n'
+  '         settings_t *fg_settings = config_get_ptr();\n'
+  '         if (fg_settings->bools.video_framegen && !vk->framegen_failed)\n'
+  '         {\n'
+  '            const bool fg_nested = (vk->context->flags & VK_CTX_FLAG_SWAP_INTERVAL_EMULATION_LOCK) != 0;\n'
+  '            const unsigned fg_n  = video_info->shader_subframes;\n'
+  '            const unsigned fg_j  = fg_nested ? vk->framegen_subframe : 1;\n'
+  '\n'
+  '            if (!fg_nested)\n'
+  '            {\n'
+  '               /* The first present of a call decides for all of them */\n'
+  '               vk->framegen_plan =\n'
+  '                     (fg_n >= 2 && fg_n <= 4)\n'
+  '                  && (backbuffer->image != VK_NULL_HANDLE)\n'
+  '                  && (vk->context->flags & VK_CTX_FLAG_HAS_ACQUIRED_SWAPCHAIN)\n'
+  '                  && !black_frame_insertion\n'
+  '                  && !input_driver_nonblock_state\n'
+  '                  && !runloop_is_slowmotion\n'
+  '                  && !runloop_is_paused\n'
+  '                  && !(vk->flags & VK_FLAG_MENU_ENABLE)\n'
+  '                  && !(vk->context->swap_interval > 1);\n'
+  '\n'
+  '               if (!vk->framegen)\n'
+  '               {\n'
+  '                  char fg_path[PATH_MAX_LENGTH];\n'
+  '                  const char *fg_env = getenv("PS5_FRAMEGEN_NETWORK");\n'
+  '                  if (fg_env && *fg_env)\n'
+  '                     strlcpy(fg_path, fg_env, sizeof(fg_path));\n'
+  '                  else\n'
+  '                     fill_pathname_join(fg_path, fg_settings->paths.directory_assets,\n'
+  '                           "framegen/network.fgw", sizeof(fg_path));\n'
+  '                  vk->framegen = vk_framegen_new(vk->context->device,\n'
+  '                        vk->context->gpu, vk->context->num_swapchain_images, fg_path);\n'
+  '                  if (!vk->framegen)\n'
+  '                     vk->framegen_failed = true;\n'
+  '               }\n'
+  '\n'
+  '               if (vk->framegen && vk->framegen_plan)\n'
+  '               {\n'
+  '                  /* Is this call a new frame? A software frame is new when its pixels differ from the '
+  'last\n'
+  '                   * new one; a hardware frame, when the core gave one. */\n'
+  '                  bool fg_unique = frame != NULL;\n'
+  '                  if (fg_unique && !(vk->flags & VK_FLAG_HW_ENABLE))\n'
+  '                  {\n'
+  '                     const size_t fg_bytes = (size_t)pitch * frame_height;\n'
+  '                     if (   vk->framegen_last\n'
+  '                         && vk->framegen_last_bytes == fg_bytes\n'
+  '                         && vk->framegen_last_pitch == pitch\n'
+  '                         && !memcmp(vk->framegen_last, frame, fg_bytes))\n'
+  '                        fg_unique = false;\n'
+  '                     else\n'
+  '                     {\n'
+  '                        if (vk->framegen_last_bytes != fg_bytes)\n'
+  '                        {\n'
+  '                           free(vk->framegen_last);\n'
+  '                           vk->framegen_last = (uint8_t*)malloc(fg_bytes);\n'
+  '                           vk->framegen_last_bytes = vk->framegen_last ? fg_bytes : 0;\n'
+  '                        }\n'
+  '                        if (vk->framegen_last)\n'
+  '                           memcpy(vk->framegen_last, frame, fg_bytes);\n'
+  '                        vk->framegen_last_pitch = pitch;\n'
+  '                     }\n'
+  '                  }\n'
+  '\n'
+  '                  if (fg_unique)\n'
+  '                  {\n'
+  '                     /* A new frame ends the group before it: how long was it? */\n'
+  '                     const unsigned fg_gap = vk->framegen_call + 1;\n'
+  '                     if (vk->framegen_group_open)\n'
+  '                     {\n'
+  '                        if (fg_gap == vk->framegen_last_gap && fg_gap >= 1 && fg_gap <= 4)\n'
+  '                           vk->framegen_period = fg_gap;\n'
+  '                        vk->framegen_last_gap = fg_gap;\n'
+  '                        /* A group cut short never recorded its frame: nothing to interpolate from */\n'
+  '                        if (vk->framegen_call + 1 < (vk->framegen_period ? vk->framegen_period : 1))\n'
+  '                           vk_framegen_invalidate(vk->framegen);\n'
+  '                     }\n'
+  '                     vk->framegen_call       = 0;\n'
+  '                     vk->framegen_group_open = true;\n'
+  "                     /* A copy of the frame is held for the group's presents (the frame of this\n"
+  '                      * present, outside any render pass, in the command buffer being recorded) */\n'
+  '                     struct vk_framegen_frame fg_cur;\n'
+  '                     fg_cur.image  = input.image;\n'
+  '                     fg_cur.view   = input.view;\n'
+  '                     fg_cur.layout = input.layout;\n'
+  '                     fg_cur.width  = input.width;\n'
+  '                     fg_cur.height = input.height;\n'
+  '                     fg_cur.format = input.format;\n'
+  '                     vk_framegen_hold(vk->framegen, vk->cmd, frame_index, &fg_cur);\n'
+  '                  }\n'
+  '                  else if (vk->framegen_group_open)\n'
+  '                     vk->framegen_call++;\n'
+  '               }\n'
+  '               else if (vk->framegen && !vk->framegen_plan)\n'
+  '               {\n'
+  '                  vk_framegen_invalidate(vk->framegen);\n'
+  '                  vk->framegen_group_open = false;\n'
+  '               }\n'
+  '            }\n'
+  '\n'
+  '            if (vk->framegen && vk->framegen_plan && vk->framegen_group_open)\n'
+  '            {\n'
+  "               /* The present's place in the group */\n"
+  '               const unsigned fg_total = (vk->framegen_period ? vk->framegen_period : 1) * fg_n;\n'
+  '               const unsigned fg_place = vk->framegen_call * fg_n + fg_j;\n'
+  '               if (fg_place < fg_total)\n'
+  '               {\n'
+  '                  if (vk_framegen_generate(vk->framegen, vk->cmd, frame_index,\n'
+  '                           (float)fg_place / (float)fg_total, &vk->framegen_frame))\n'
+  '                  {\n'
+  '                     input.image  = vk->framegen_frame.image;\n'
+  '                     input.view   = vk->framegen_frame.view;\n'
+  '                     input.layout = vk->framegen_frame.layout;\n'
+  '                     input.width  = vk->framegen_frame.width;\n'
+  '                     input.height = vk->framegen_frame.height;\n'
+  '                     input.format = vk->framegen_frame.format;\n'
+  '                     input.physical_width = vk->framegen_frame.width;\n'
+  '                  }\n'
+  '               }\n'
+  '               else if (fg_place == fg_total)\n'
+  '                  vk_framegen_commit(vk->framegen);\n'
+  '            }\n'
+  '         }\n'
+  '      }\n'
+  '\n'
+  '      vulkan_filter_chain_set_input_texture((vulkan_filter_chain_t*)\n'
+  '            filter_chain, &input);\n',
+  'patches/series, 0119: with N shader subframes'),
+ ('gfx/drivers/vulkan.c',
+  '         vulkan_filter_chain_set_current_shader_subframe(\n'
+  '               (vulkan_filter_chain_t*)filter_chain, j+1);\n',
+  '         vulkan_filter_chain_set_current_shader_subframe(\n'
+  '               (vulkan_filter_chain_t*)filter_chain, j+1);\n'
+  '         vk->framegen_subframe = (unsigned)(j + 1); /* patches/series, 0119 */\n',
+  'vk->framegen_subframe = (unsigned)(j + 1); /* patches/series, 0119 */'),
+ ('configuration.h',
+  '      bool video_scan_subframes;\n',
+  '      bool video_scan_subframes;\n      bool video_framegen; /* patches/series, 0119 */\n',
+  'bool video_framegen; /* patches/series, 0119 */'),
+ ('configuration.c',
+  '   SETTING_BOOL("video_scan_subframes",',
+  '   SETTING_BOOL("video_framegen", &settings->bools.video_framegen, true, false, false); /* '
+  'patches/series, 0119 */\n'
+  '   SETTING_BOOL("video_scan_subframes",',
+  '/* patches/series, 0119 */')]
 
 # Changes that are withdrawn rather than deleted, by marker.
 #

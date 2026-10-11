@@ -496,6 +496,15 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps({"release": sys.argv[2], "build"
     "repository": "mihawk-99/PS5_RetroArch"}) + "\n")
 PY_WEBUI
 
+# The frame generator's trained network (patches/series, 0119), from PS5_FrameGen beside this repository.
+fg_network="${PS5_FRAMEGEN:-$root/../PS5_FrameGen}/framegen/models/network.fgw"
+if [[ -f $fg_network ]]; then
+    mkdir -p "$dist/assets/framegen"
+    cp "$fg_network" "$dist/assets/framegen/network.fgw"
+else
+    printf '==> [title] no network at %s; video_framegen will find nothing to load\n' "$fg_network" >&2
+fi
+
 # Pinned production effects, with dependency and development-fixture checks.
 python3 "$root/tools/video-assets.py" stage "$dist"
 

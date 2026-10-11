@@ -244,6 +244,15 @@ if [[ ! -f $patch_stamp || $(<"$patch_stamp") != "$patch_list" ]]; then
     printf '%s\n' "$patch_list" > "$patch_stamp"
 fi
 
+# Frame generation (patches/series, 0119): the generator and the driver's shim are PS5_FrameGen's,
+# checked out beside this repository. The shim's header goes into the configured tree, where
+# vulkan.c includes it by name. Its objects are built here and join the archive below.
+fg="${PS5_FRAMEGEN:-$root/../PS5_FrameGen}"
+fg_objects=()
+if [[ -f $fg/framegen/include/framegen.h ]]; then
+    cmp -s "$fg/integrations/retroarch/gfx/vulkan_framegen.h" "$tree/gfx/drivers/vulkan_framegen.h" ||
+        cp "$fg/integrations/retroarch/gfx/vulkan_framegen.h" "$tree/gfx/drivers/vulkan_framegen.h"
+fi
 compiled=0
 skipped=()
 failed=()
@@ -283,6 +292,26 @@ for source in "${sources[@]}"; do
     fi
 done
 
+# The generator's units: C++20 with exceptions (as the frontend's C++), through RetroArch's Vulkan
+# symbol wrapper, so every vk call goes through the pointers RetroArch loads.
+fg_sources=("$fg/framegen/src/fg_common.cpp" "$fg/framegen/src/fg_vulkan.cpp"
+            "$fg/framegen/src/fg_neural.cpp" "$fg/integrations/retroarch/gfx/vulkan_framegen.cpp")
+for src in "${fg_sources[@]}"; do
+    [[ -f $src ]] || { failed+=("$src: absent (PS5_FRAMEGEN=$fg)"); continue; }
+    target="$obj/framegen_$(basename "${src%.cpp}").o"
+    if ! { [[ -f $target && $target -nt $src ]] &&
+           [[ -z $(find "$fg/framegen" -newer "$target" \( -name '*.h' -o -name '*.cpp' \) -print -quit) ]]; }; then
+        PS5_CLANG=/usr/bin/clang PS5_PAYLOAD_SDK="$sdk" \
+            sh "$root/tooling/prospero-clang18" -std=c++20 -O2 -w -fexceptions -fno-rtti \
+               -ffunction-sections -fdata-sections -include vulkan/vulkan_symbol_wrapper.h \
+               "${defines[@]}" "${includes[@]}" -I"$fg/framegen/include" -I"$fg/framegen/src" \
+               -I"$fg/integrations/retroarch/gfx" -c "$src" -o "$target" 2>"$out/last-error.txt" ||
+            { failed+=("$src: $(grep -m1 'error:' "$out/last-error.txt" | sed 's/^.*error: //')"); continue; }
+    fi
+    fg_objects+=("$target")
+    compiled=$((compiled + 1))
+done
+
 echo "==> [ra] compiled $compiled of ${#sources[@]} sources"
 if (( ${#skipped[@]} )); then
     printf '==> [ra] %s sources absent in 1.22.2:\n' "${#skipped[@]}"
@@ -311,6 +340,7 @@ for source in "${sources[@]}"; do
     target="$obj/${source//\//_}.o"
     [[ -f $target ]] && members+=("$target")
 done
+members+=("${fg_objects[@]}")
 ar=$(command -v llvm-ar || command -v ar)
 ranlib=$(command -v llvm-ranlib || command -v ranlib)
 [[ -n $ar && -n $ranlib ]] || { echo "error: no archiver found" >&2; exit 2; }
