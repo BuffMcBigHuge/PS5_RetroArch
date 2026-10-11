@@ -43,6 +43,9 @@ float ps5_fg_target_fps = 119.88f;
 float ps5_fg_dbg_t = 1.0f;
 /* 1: the core cannot keep its own rate, so frames are shown as it makes them (the driver reads it) */
 int ps5_fg_floor;
+/* For the FPS counter (gfx/video_driver.c): 1 while frames are being generated; the presents a second over the last window */
+int ps5_fg_active;
+float ps5_fg_presents_per_s;
 
 /* The loaded core's frame rate, kept by the video setup (patches/series, 0121) for the driver's cadence check */
 float ps5_fg_core_fps;
@@ -195,8 +198,8 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
    char text[200];
    settings_t *settings = config_get_ptr();
    struct timespec t;
-   if (!settings->bools.video_framegen_osd)
-      return;
+   const bool show_osd = settings->bools.video_framegen_osd;
+   ps5_fg_active = plan && settings->bools.video_framegen && !ps5_fg_floor && pictures >= 2;
    presents++;
    clock_gettime(CLOCK_MONOTONIC, &t);
    {
@@ -275,11 +278,12 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
             gap_n[1], gap_n[1] ? gap_sum[1] / (double)gap_n[1] : 0.0, gap_max[1], gap_off[1]);
       memset(gap_n, 0, sizeof(gap_n)); memset(gap_sum, 0, sizeof(gap_sum));
       memset(gap_max, 0, sizeof(gap_max)); memset(gap_off, 0, sizeof(gap_off));
+      ps5_fg_presents_per_s = (float)((double)presents / seconds);
       presents       = 0;
       last_generated = generated;
       last           = t;
    }
-   if (++osd_calls % 120)
+   if (!show_osd || ++osd_calls % 120)
       return;
    ps5_fg_current(&now);
    if (!now.enable)

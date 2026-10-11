@@ -4389,13 +4389,17 @@ EDITS += [('configuration.h',
  ('gfx/video_driver.c',
   '         last_fps     = TIME_TO_FPS(curr_time, new_time, new_frames);\n         new_frames   = 0;\n',
   '         last_fps     = TIME_TO_FPS(curr_time, new_time, new_frames);\n'
-  '         /* patches/series, 0121: each game frame is presented shader_subframes times (frame generation): '
-  'the rate shown is the rate of\n'
-  '          * the frames the display gets */\n'
-  '         if (video_info.shader_subframes > 1)\n'
-  '            last_fps *= (float)video_info.shader_subframes;\n'
+  '         /* patches/series, 0121: with frame generation on, the rate shown is the rate of the pictures the display\n'
+  '          * gets (the presents a second the generator counted); otherwise it is the core\'s own new frames a second,\n'
+  '          * not the display\'s: a 30 fps game shown twice each is 30 */\n'
+  '         {\n'
+  '            extern int ps5_fg_active;\n'
+  '            extern float ps5_fg_presents_per_s;\n'
+  '            if (ps5_fg_active && ps5_fg_presents_per_s > 1.0f)\n'
+  '               last_fps = ps5_fg_presents_per_s;\n'
+  '         }\n'
   '         new_frames   = 0;\n',
-  'patches/series, 0121: each game frame is presented shader_subframes times'),
+  'patches/series, 0121: with frame generation on, the rate shown'),
  ('retroarch.c',
   '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
   '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'

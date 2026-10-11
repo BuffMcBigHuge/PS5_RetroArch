@@ -83,6 +83,8 @@
 #include "command.h"
 #include "configuration.h"
 #include "core_option_manager.h"
+#include "core.h"
+#include "core_info.h"
 #include "menu/menu_driver.h"
 #if defined(HAVE_SLANG)
 #include "gfx/video_shader_parse.h"
@@ -1085,6 +1087,15 @@ void run_script_actions() noexcept
             const int slot = settings->ints.state_slot;
             if (action.slot >= 0)
                 settings->ints.state_slot = action.slot;
+            {
+                // What a state needs, in the trace: why a load that logs nothing returns false
+                char why[320];
+                char path[512] = "";
+                runloop_get_current_savestate_path(path, sizeof(path));
+                std::snprintf(why, sizeof(why), "input: state check: core supports savestate=%d serialize_size=%zu path=%s",
+                              core_info_current_supports_savestate() ? 1 : 0, core_serialize_size(), path);
+                ps5_input_trace(why);
+            }
             const bool ok =
                 command_event(save ? CMD_EVENT_SAVE_STATE : CMD_EVENT_LOAD_STATE, nullptr);
             settings->ints.state_slot = slot;
