@@ -4378,51 +4378,6 @@ EDITS += [('configuration.h',
   '            last_fps *= (float)video_info.shader_subframes;\n'
   '         new_frames   = 0;\n',
   'patches/series, 0121: each game frame is presented shader_subframes times'),
- ('gfx/drivers/vulkan.c',
-  '                  bool fg_unique = frame != NULL;\n',
-  '                  bool fg_unique = frame != NULL;\n'
-  '                  bool fg_localized = false; /* patches/series, 0121: only a small part of the picture '
-  'changed */\n',
-  'bool fg_localized = false; /* patches/series, 0121'),
- ('gfx/drivers/vulkan.c',
-  '                     else\n'
-  '                     {\n'
-  '                        if (vk->framegen_last_bytes != fg_bytes)\n',
-  '                     else\n'
-  '                     {\n'
-  '                        /* patches/series, 0121: a pose change or a sprite that moves a little in a still '
-  'picture is not what frame\n'
-  '                         * generation is for, and warping it tears the sprite: such frames are shown as '
-  'the core made\n'
-  '                         * them. Only a change over a larger part of the picture (a scroll, a camera) is '
-  'interpolated. */\n'
-  '                        if (   vk->framegen_last\n'
-  '                            && vk->framegen_last_bytes == fg_bytes\n'
-  '                            && vk->framegen_last_pitch == pitch\n'
-  '                            && frame_width > 0 && frame_height > 0)\n'
-  '                        {\n'
-  '                           const unsigned fg_bpp = vk->video.rgb32 ? 4 : 2;\n'
-  '                           size_t fg_changed = 0;\n'
-  '                           unsigned fg_y, fg_x;\n'
-  '                           for (fg_y = 0; fg_y < frame_height; fg_y++)\n'
-  '                           {\n'
-  '                              const uint8_t *fg_a = vk->framegen_last + (size_t)fg_y * pitch;\n'
-  '                              const uint8_t *fg_b = (const uint8_t*)frame + (size_t)fg_y * pitch;\n'
-  '                              for (fg_x = 0; fg_x < frame_width; fg_x++)\n'
-  '                                 if (memcmp(fg_a + (size_t)fg_x * fg_bpp, fg_b + (size_t)fg_x * fg_bpp, '
-  'fg_bpp))\n'
-  '                                    fg_changed++;\n'
-  '                           }\n'
-  '                           fg_localized = fg_changed * 100 < (size_t)frame_width * frame_height * 6;\n'
-  '                        }\n'
-  '                        if (vk->framegen_last_bytes != fg_bytes)\n',
-  'patches/series, 0121: a pose change or a sprite that moves a little'),
- ('gfx/drivers/vulkan.c',
-  '                     vk_framegen_hold(vk->framegen, vk->cmd, frame_index, &fg_cur);\n',
-  '                     if (fg_localized)\n'
-  '                        vk_framegen_invalidate(vk->framegen); /* patches/series, 0121 */\n'
-  '                     vk_framegen_hold(vk->framegen, vk->cmd, frame_index, &fg_cur);\n',
-  'vk_framegen_invalidate(vk->framegen); /* patches/series, 0121 */'),
  ('retroarch.c',
   '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
   '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'
