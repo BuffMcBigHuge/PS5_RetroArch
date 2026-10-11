@@ -600,8 +600,9 @@ int main(int process_argc, char **process_argv)
     // Kept separate so RetroArch's normal config save cannot erase browser edits.
     static char webui_append[] = "--appendconfig";
     static char webui_config[] = "/app0/config/webui.cfg";
-    static char
-        combined_configs[max_extra_arg_len + sizeof(webui_config) + sizeof(game_config) + 2];
+    static char framegen_config[] = "/app0/config/framegen.cfg"; /* patches/series, 0120 */
+    static char combined_configs[max_extra_arg_len + sizeof(webui_config) + sizeof(game_config) +
+                                 sizeof(framegen_config) + 3];
     bool saved_webui = false;
     if (std::FILE *webui = std::fopen(webui_config, "rb"))
     {
@@ -609,7 +610,14 @@ int main(int process_argc, char **process_argv)
         saved_webui = true;
         ps5::debug::mark("webui: applying saved settings at startup");
     }
-    if (saved_webui || game)
+    bool saved_framegen = false;
+    if (std::FILE *framegen = std::fopen(framegen_config, "rb"))
+    {
+        std::fclose(framegen);
+        saved_framegen = true;
+        ps5::debug::mark("framegen: applying saved options at startup");
+    }
+    if (saved_webui || saved_framegen || game)
     {
         // RetroArch uses only the last --appendconfig, with | separating files.
         // Explicit launch overrides still win over the browser's saved defaults.
@@ -621,10 +629,20 @@ int main(int process_argc, char **process_argv)
             else if (std::strncmp(extra_storage[i], "--appendconfig=", 15) == 0)
                 explicit_config = extra_storage[i] + 15;
         }
-        std::snprintf(combined_configs, sizeof(combined_configs), "%s%s%s%s%s",
-                      saved_webui ? webui_config : "", saved_webui && game ? "|" : "",
-                      game ? game_config : "", explicit_config ? "|" : "",
-                      explicit_config ? explicit_config : "");
+        // The browser's defaults, then the frame generation options, then the game's, then
+        // the launch's own: a later file wins.
+        const char *const parts[] = {saved_webui ? webui_config : nullptr,
+                                     saved_framegen ? framegen_config : nullptr,
+                                     game ? game_config : nullptr, explicit_config};
+        std::size_t used = 0;
+        combined_configs[0] = '\0';
+        for (const char *part : parts)
+        {
+            if (!part)
+                continue;
+            used += std::snprintf(combined_configs + used, sizeof(combined_configs) - used, "%s%s",
+                                  used ? "|" : "", part);
+        }
         argv_with_extras[base_count + extra_count++] = webui_append;
         argv_with_extras[base_count + extra_count++] = combined_configs;
     }

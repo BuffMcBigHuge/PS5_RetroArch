@@ -3952,6 +3952,363 @@ EDITS += [('gfx/drivers/vulkan.c',
   '   SETTING_BOOL("video_scan_subframes",',
   '/* patches/series, 0119 */')]
 
+# Frame generation menus (patches/series, 0120): options in the XMB (leftmost tab), RGUI (topmost entry)
+# and the shared options file; src/ps5_framegen_menu.c holds the code.
+EDITS += [('configuration.h',
+  '      unsigned video_shader_subframes;\n',
+  '      unsigned video_shader_subframes;\n'
+  '      unsigned video_framegen_method; /* patches/series, 0120: 0 neural, 1 blend, 2 repeat */\n'
+  '      unsigned video_framegen_cadence; /* patches/series, 0120: 0 measured, else core frames per new '
+  'frame */\n'
+  '      unsigned video_framegen_size; /* patches/series, 0120: 0 4K, 1 1440p, 2 1080p, 3 720p */\n',
+  'video_framegen_method; /* patches/series, 0120'),
+ ('configuration.h',
+  '      bool video_framegen;',
+  '      bool video_framegen_osd; /* patches/series, 0120: status on screen */\n      bool video_framegen;',
+  'video_framegen_osd; /* patches/series, 0120'),
+ ('configuration.c',
+  '   SETTING_BOOL("video_framegen", &settings->bools.video_framegen, true, false, false);',
+  '   SETTING_BOOL("video_framegen_osd", &settings->bools.video_framegen_osd, true, false, false); /* '
+  'patches/series, 0120 */\n'
+  '   SETTING_BOOL("video_framegen", &settings->bools.video_framegen, true, false, false);',
+  'SETTING_BOOL("video_framegen_osd", &settings->bools.video_framegen_osd, true, false, false); /* '
+  'patches/series, 0120 */'),
+ ('configuration.c',
+  '   SETTING_UINT("video_shader_subframes",        &settings->uints.video_shader_subframes, true, '
+  'DEFAULT_SHADER_SUBFRAMES, false);',
+  '   SETTING_UINT("video_framegen_method", &settings->uints.video_framegen_method, true, 0, false); /* '
+  'patches/series, 0120 */\n'
+  '   SETTING_UINT("video_framegen_cadence", &settings->uints.video_framegen_cadence, true, 0, false); /* '
+  'patches/series, 0120 */\n'
+  '   SETTING_UINT("video_framegen_size", &settings->uints.video_framegen_size, true, 0, false); /* '
+  'patches/series, 0120 */\n'
+  '   SETTING_UINT("video_shader_subframes",        &settings->uints.video_shader_subframes, true, '
+  'DEFAULT_SHADER_SUBFRAMES, false);',
+  'SETTING_UINT("video_framegen_method", &settings->uints.video_framegen_method, true, 0, false); /* '
+  'patches/series, 0120 */'),
+ ('gfx/drivers/vulkan.c',
+  '               if (vk->framegen && vk->framegen_plan)\n               {\n',
+  '               if (vk->framegen)\n'
+  '                  vk_framegen_options(vk->framegen, fg_settings->uints.video_framegen_method,\n'
+  '                        ps5_fg_size_pixels_of(fg_settings->uints.video_framegen_size)); /* '
+  'patches/series, 0120 */\n'
+  '\n'
+  '               if (vk->framegen && vk->framegen_plan)\n'
+  '               {\n',
+  'ps5_fg_size_pixels_of(fg_settings->uints.video_framegen_size)); /* patches/series, 0120 */'),
+ ('gfx/drivers/vulkan.c',
+  '                     vk->framegen_call       = 0;\n                     vk->framegen_group_open = true;\n',
+  '                     if (fg_settings->uints.video_framegen_cadence) /* patches/series, 0120: forced '
+  'cadence */\n'
+  '                        vk->framegen_period = fg_settings->uints.video_framegen_cadence % 5;\n'
+  '                     vk->framegen_call       = 0;\n'
+  '                     vk->framegen_group_open = true;\n',
+  'forced cadence */'),
+ ('gfx/drivers/vulkan.c',
+  '#include "vulkan_framegen.h"\n',
+  '#include "vulkan_framegen.h"\n'
+  'extern unsigned long ps5_fg_size_pixels_of(unsigned size); /* patches/series, 0120 */\n'
+  'extern void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, unsigned height,\n'
+  '      unsigned long generated);\n',
+  'ps5_fg_size_pixels_of(unsigned size); /* patches/series, 0120 */'),
+ ('gfx/drivers/vulkan.c',
+  '      vulkan_filter_chain_set_input_texture((vulkan_filter_chain_t*)\n'
+  '            filter_chain, &input);\n',
+  '      /* patches/series, 0120: status on screen */\n'
+  '      if (config_get_ptr()->bools.video_framegen_osd)\n'
+  '      {\n'
+  '         unsigned fg_w = 0, fg_h = 0;\n'
+  '         unsigned long fg_n_made = 0;\n'
+  '         vk_framegen_stats(vk->framegen, &fg_w, &fg_h, &fg_n_made);\n'
+  '         ps5_fg_osd(vk->framegen_plan && vk->framegen && config_get_ptr()->bools.video_framegen,\n'
+  '               video_info->shader_subframes, vk->framegen_period, fg_w, fg_h, fg_n_made);\n'
+  '      }\n'
+  '\n'
+  '      vulkan_filter_chain_set_input_texture((vulkan_filter_chain_t*)\n'
+  '            filter_chain, &input);\n',
+  '/* patches/series, 0120: status on screen */'),
+ ('menu/cbs/menu_cbs_ok.c',
+  '/* patches/series, 0115: WebUI action */\n',
+  '/* patches/series, 0120: frame generation entries */\n'
+  'extern bool ps5_fg_menu_is_label(const char *label);\n'
+  'extern bool ps5_fg_menu_is_folder(const char *label);\n'
+  'extern void ps5_fg_menu_step(const char *label, int direction);\n'
+  'static int action_ok_ps5_fg(const char *path, const char *label,\n'
+  '      unsigned type, size_t idx, size_t entry_idx)\n'
+  '{\n'
+  '   ps5_fg_menu_step(label, 1);\n'
+  '   return 0;\n'
+  '}\n'
+  '\n'
+  '/* patches/series, 0115: WebUI action */\n',
+  '/* patches/series, 0120: frame generation entries */'),
+ ('menu/cbs/menu_cbs_ok.c',
+  '   /* patches/series, 0116: WebUI entry action */\n',
+  '   /* patches/series, 0120: frame generation entry action */\n'
+  '   if (ps5_fg_menu_is_label(label))\n'
+  '   {\n'
+  '      if (ps5_fg_menu_is_folder(label))\n'
+  '         BIND_ACTION_OK(cbs, action_ok_push_default);\n'
+  '      else\n'
+  '         BIND_ACTION_OK(cbs, action_ok_ps5_fg);\n'
+  '      return 0;\n'
+  '   }\n'
+  '   /* patches/series, 0116: WebUI entry action */\n',
+  '/* patches/series, 0120: frame generation entry action */'),
+ ('menu/cbs/menu_cbs_left.c',
+  'int menu_cbs_init_bind_left(menu_file_list_cbs_t *cbs,',
+  '/* patches/series, 0120: frame generation values */\n'
+  'extern bool ps5_fg_menu_has_values(const char *label);\n'
+  'extern void ps5_fg_menu_step(const char *label, int direction);\n'
+  'static int action_left_ps5_fg(unsigned type, const char *label, bool wraparound)\n'
+  '{\n'
+  '   ps5_fg_menu_step(label, -1);\n'
+  '   return 0;\n'
+  '}\n'
+  '\n'
+  'int menu_cbs_init_bind_left(menu_file_list_cbs_t *cbs,',
+  'static int action_left_ps5_fg('),
+ ('menu/cbs/menu_cbs_left.c',
+  '   BIND_ACTION_LEFT(cbs, bind_left_generic);\n',
+  '   BIND_ACTION_LEFT(cbs, bind_left_generic);\n'
+  '\n'
+  '   /* patches/series, 0120: frame generation values */\n'
+  '   if (ps5_fg_menu_has_values(label))\n'
+  '   {\n'
+  '      BIND_ACTION_LEFT(cbs, action_left_ps5_fg);\n'
+  '      return 0;\n'
+  '   }\n',
+  '/* patches/series, 0120: frame generation values */\n   if (ps5_fg_menu_has_values(label))'),
+ ('menu/cbs/menu_cbs_right.c',
+  'int menu_cbs_init_bind_right(menu_file_list_cbs_t *cbs,',
+  '/* patches/series, 0120: frame generation values */\n'
+  'extern bool ps5_fg_menu_has_values(const char *label);\n'
+  'extern void ps5_fg_menu_step(const char *label, int direction);\n'
+  'static int action_right_ps5_fg(unsigned type, const char *label, bool wraparound)\n'
+  '{\n'
+  '   ps5_fg_menu_step(label, 1);\n'
+  '   return 0;\n'
+  '}\n'
+  '\n'
+  'int menu_cbs_init_bind_right(menu_file_list_cbs_t *cbs,',
+  'static int action_right_ps5_fg('),
+ ('menu/cbs/menu_cbs_right.c',
+  '   BIND_ACTION_RIGHT(cbs, bind_right_generic);\n',
+  '   BIND_ACTION_RIGHT(cbs, bind_right_generic);\n'
+  '\n'
+  '   /* patches/series, 0120: frame generation values */\n'
+  '   if (ps5_fg_menu_has_values(label))\n'
+  '   {\n'
+  '      BIND_ACTION_RIGHT(cbs, action_right_ps5_fg);\n'
+  '      return 0;\n'
+  '   }\n',
+  '/* patches/series, 0120: frame generation values */\n   if (ps5_fg_menu_has_values(label))'),
+ ('menu/cbs/menu_cbs_get_value.c',
+  'int menu_cbs_init_bind_get_string_representation(menu_file_list_cbs_t *cbs,',
+  '/* patches/series, 0120: frame generation values */\n'
+  'extern bool ps5_fg_menu_is_label(const char *label);\n'
+  'extern size_t ps5_fg_menu_text(const char *label, char *value, size_t value_len, char *name, size_t '
+  'name_len);\n'
+  'static size_t menu_action_ps5_fg_value(\n'
+  '   file_list_t* list,\n'
+  '   unsigned *w, unsigned type, unsigned i,\n'
+  '   const char *label,\n'
+  '   char *s, size_t len,\n'
+  '   const char *path,\n'
+  '   char *s2, size_t len2)\n'
+  '{\n'
+  '   const char *entry_label = NULL;\n'
+  '   *w = 19;\n'
+  '   if (list && i < list->size) entry_label = list->list[i].label;\n'
+  '   return ps5_fg_menu_text(entry_label, s, len, s2, len2);\n'
+  '}\n'
+  '\n'
+  'int menu_cbs_init_bind_get_string_representation(menu_file_list_cbs_t *cbs,',
+  'static size_t menu_action_ps5_fg_value('),
+ ('menu/cbs/menu_cbs_get_value.c',
+  '   if (cbs->enum_idx != MSG_UNKNOWN)\n'
+  '   {\n'
+  '      switch (cbs->enum_idx)\n'
+  '      {\n'
+  '         case MENU_ENUM_LABEL_CHEEVOS_LOCKED_ENTRY:',
+  '   /* patches/series, 0120: frame generation values */\n'
+  '   if (ps5_fg_menu_is_label(label))\n'
+  '   {\n'
+  '      BIND_ACTION_GET_VALUE(cbs, menu_action_ps5_fg_value);\n'
+  '      return 0;\n'
+  '   }\n'
+  '\n'
+  '   if (cbs->enum_idx != MSG_UNKNOWN)\n'
+  '   {\n'
+  '      switch (cbs->enum_idx)\n'
+  '      {\n'
+  '         case MENU_ENUM_LABEL_CHEEVOS_LOCKED_ENTRY:',
+  'BIND_ACTION_GET_VALUE(cbs, menu_action_ps5_fg_value);'),
+ ('menu/cbs/menu_cbs_title.c',
+  'int menu_cbs_init_bind_title(menu_file_list_cbs_t *cbs,',
+  '/* patches/series, 0120: frame generation title */\n'
+  'static int action_get_title_ps5_fg(const char *path, const char *label,\n'
+  '      unsigned menu_type, char *s, size_t len)\n'
+  '{\n'
+  '   strlcpy(s, "Frame Generation", len);\n'
+  '   return 0;\n'
+  '}\n'
+  '\n'
+  'int menu_cbs_init_bind_title(menu_file_list_cbs_t *cbs,',
+  'static int action_get_title_ps5_fg('),
+ ('menu/cbs/menu_cbs_title.c',
+  '   BIND_ACTION_GET_TITLE(cbs, action_get_title_default);\n',
+  '   BIND_ACTION_GET_TITLE(cbs, action_get_title_default);\n'
+  '\n'
+  '   /* patches/series, 0120: frame generation title */\n'
+  '   if (label && !strcmp(label, "ps5_framegen"))\n'
+  '   {\n'
+  '      BIND_ACTION_GET_TITLE(cbs, action_get_title_ps5_fg);\n'
+  '      return 0;\n'
+  '   }\n',
+  '/* patches/series, 0120: frame generation title */\n   if (label'),
+ ('menu/cbs/menu_cbs_sublabel.c',
+  'int menu_cbs_init_bind_sublabel(menu_file_list_cbs_t *cbs,',
+  '/* patches/series, 0120: frame generation descriptions */\n'
+  'extern bool ps5_fg_menu_is_label(const char *label);\n'
+  'extern void ps5_fg_menu_help(const char *label, char *s, size_t len);\n'
+  'static int action_bind_sublabel_ps5_fg(file_list_t *list,\n'
+  '      unsigned type, unsigned i,\n'
+  '      const char *label, const char *path,\n'
+  '      char *s, size_t len)\n'
+  '{\n'
+  '   const char *entry_label = NULL;\n'
+  '   if (list && i < list->size) entry_label = list->list[i].label;\n'
+  '   ps5_fg_menu_help(entry_label, s, len);\n'
+  '   return 0;\n'
+  '}\n'
+  '\n'
+  'int menu_cbs_init_bind_sublabel(menu_file_list_cbs_t *cbs,',
+  'static int action_bind_sublabel_ps5_fg('),
+ ('menu/cbs/menu_cbs_sublabel.c',
+  '   BIND_ACTION_SUBLABEL(cbs, action_bind_sublabel_generic);\n',
+  '   BIND_ACTION_SUBLABEL(cbs, action_bind_sublabel_generic);\n'
+  '\n'
+  '   /* patches/series, 0120: frame generation descriptions */\n'
+  '   if (ps5_fg_menu_is_label(label))\n'
+  '   {\n'
+  '      BIND_ACTION_SUBLABEL(cbs, action_bind_sublabel_ps5_fg);\n'
+  '      return 0;\n'
+  '   }\n',
+  'BIND_ACTION_SUBLABEL(cbs, action_bind_sublabel_ps5_fg);'),
+ ('menu/cbs/menu_cbs_deferred_push.c',
+  'int menu_cbs_init_bind_deferred_push(menu_file_list_cbs_t *cbs,',
+  '/* patches/series, 0120: the frame generation submenu */\n'
+  'extern void ps5_fg_menu_fill(file_list_t *list, bool tab);\n'
+  'static int deferred_push_ps5_framegen(menu_displaylist_info_t *info)\n'
+  '{\n'
+  '   menu_entries_clear(info->list);\n'
+  '   ps5_fg_menu_fill(info->list, false);\n'
+  '   info->flags |= MD_FLAG_NEED_PUSH | MD_FLAG_NEED_REFRESH;\n'
+  '   menu_displaylist_process(info);\n'
+  '   return 0;\n'
+  '}\n'
+  '\n'
+  'int menu_cbs_init_bind_deferred_push(menu_file_list_cbs_t *cbs,',
+  'static int deferred_push_ps5_framegen('),
+ ('menu/cbs/menu_cbs_deferred_push.c',
+  '   BIND_ACTION_DEFERRED_PUSH(cbs, deferred_push_default);\n',
+  '   BIND_ACTION_DEFERRED_PUSH(cbs, deferred_push_default);\n'
+  '\n'
+  '   /* patches/series, 0120: the frame generation submenu */\n'
+  '   if (label && !strcmp(label, "ps5_framegen"))\n'
+  '   {\n'
+  '      BIND_ACTION_DEFERRED_PUSH(cbs, deferred_push_ps5_framegen);\n'
+  '      return 0;\n'
+  '   }\n',
+  '/* patches/series, 0120: the frame generation submenu */\n   if (label'),
+ ('menu/menu_displaylist.c',
+  '               /* patches/series, 0115: RGUI WebUI first */\n',
+  '               /* patches/series, 0120: RGUI Frame Generation topmost */\n'
+  '               if (string_is_equal(menu_ident, "rgui"))\n'
+  '                  if (menu_entries_append(info->list, "Frame Generation", "ps5_framegen", MSG_UNKNOWN,\n'
+  '                           MENU_SETTING_ACTION, 0, 0, NULL))\n'
+  '                     count++;\n'
+  '\n'
+  '               /* patches/series, 0115: RGUI WebUI first */\n',
+  '/* patches/series, 0120: RGUI Frame Generation topmost */'),
+ ('menu/drivers/xmb.c',
+  '   XMB_SYSTEM_TAB_WEBUI, /* patches/series, 0115: WebUI tab */\n',
+  '   XMB_SYSTEM_TAB_WEBUI, /* patches/series, 0115: WebUI tab */\n'
+  '   XMB_SYSTEM_TAB_FRAMEGEN, /* patches/series, 0120: Frame Generation tab */\n',
+  'XMB_SYSTEM_TAB_FRAMEGEN, /* patches/series, 0120'),
+ ('menu/drivers/xmb.c',
+  '   xmb_node_t webui_tab_node; /* patches/series, 0115: WebUI node */\n',
+  '   xmb_node_t webui_tab_node; /* patches/series, 0115: WebUI node */\n'
+  '   xmb_node_t framegen_tab_node; /* patches/series, 0120: Frame Generation node */\n',
+  'xmb_node_t framegen_tab_node; /* patches/series, 0120'),
+ ('menu/drivers/xmb.c',
+  '      case XMB_SYSTEM_TAB_WEBUI:\n         return &xmb->webui_tab_node;\n',
+  '      case XMB_SYSTEM_TAB_WEBUI:\n'
+  '         return &xmb->webui_tab_node;\n'
+  '      case XMB_SYSTEM_TAB_FRAMEGEN: /* patches/series, 0120 */\n'
+  '         return &xmb->framegen_tab_node;\n',
+  'return &xmb->framegen_tab_node;'),
+ ('menu/drivers/xmb.c',
+  '   xmb->tabs[xmb->system_tab_end]     = XMB_SYSTEM_TAB_MAIN;\n',
+  '   xmb->tabs[xmb->system_tab_end]     = XMB_SYSTEM_TAB_FRAMEGEN; /* patches/series, 0120: Frame '
+  'Generation leftmost */\n'
+  '   xmb->tabs[++xmb->system_tab_end]   = XMB_SYSTEM_TAB_MAIN;\n',
+  '= XMB_SYSTEM_TAB_FRAMEGEN; /* patches/series, 0120'),
+ ('menu/drivers/xmb.c',
+  '   xmb->webui_tab_node.icon = xmb->textures.list[XMB_TEXTURE_NETWORK];\n',
+  '   xmb->framegen_tab_node.icon = xmb->textures.list[XMB_TEXTURE_MOVIE]; /* patches/series, 0120: Frame '
+  'Generation icon */\n'
+  '   xmb->framegen_tab_node.alpha = xmb->categories_active_alpha;\n'
+  '   xmb->framegen_tab_node.zoom = xmb->categories_active_zoom;\n'
+  '   xmb->webui_tab_node.icon = xmb->textures.list[XMB_TEXTURE_NETWORK];\n',
+  '/* patches/series, 0120: Frame Generation icon */'),
+ ('menu/drivers/xmb.c',
+  '            case XMB_SYSTEM_TAB_WEBUI: /* patches/series, 0115: WebUI main-list routing */\n',
+  '            case XMB_SYSTEM_TAB_FRAMEGEN: /* patches/series, 0120: Frame Generation main-list routing */\n'
+  '            case XMB_SYSTEM_TAB_WEBUI: /* patches/series, 0115: WebUI main-list routing */\n',
+  '/* patches/series, 0120: Frame Generation main-list routing */'),
+ ('menu/drivers/xmb.c',
+  '   /* patches/series, 0115: WebUI title */\n',
+  '   /* patches/series, 0120: Frame Generation title */\n'
+  '   if (xmb->depth == 1 && xmb_get_system_tab(xmb, (unsigned)xmb->categories_selection_ptr) == '
+  'XMB_SYSTEM_TAB_FRAMEGEN)\n'
+  '   {\n'
+  '      strlcpy(xmb->title_name, "Frame Generation", sizeof(xmb->title_name));\n'
+  '      strlcpy(xmb->title_name_alt, "Frame Generation", sizeof(xmb->title_name_alt));\n'
+  '   }\n'
+  '   /* patches/series, 0115: WebUI title */\n',
+  '/* patches/series, 0120: Frame Generation title */'),
+ ('menu/drivers/xmb.c',
+  '   /* patches/series, 0115: WebUI tab contents */\n',
+  '   /* patches/series, 0120: Frame Generation tab contents */\n'
+  '   xmb_handle_t *framegen_xmb = (xmb_handle_t*)userdata;\n'
+  '   if (type == DISPLAYLIST_MAIN_MENU && framegen_xmb &&\n'
+  '         xmb_get_system_tab(framegen_xmb, (unsigned)framegen_xmb->categories_selection_ptr) == '
+  'XMB_SYSTEM_TAB_FRAMEGEN)\n'
+  '   {\n'
+  '      menu_entries_clear(info->list);\n'
+  '      ps5_fg_menu_fill(info->list, true);\n'
+  '      info->flags |= MD_FLAG_NEED_PUSH | MD_FLAG_NEED_REFRESH;\n'
+  '      return 0;\n'
+  '   }\n'
+  '   /* patches/series, 0115: WebUI tab contents */\n',
+  '/* patches/series, 0120: Frame Generation tab contents */'),
+ ('menu/drivers/xmb.c',
+  '/* patches/series, 0115: WebUI drawing helpers */\n',
+  '/* patches/series, 0120: Frame Generation entries */\n'
+  'extern void ps5_fg_menu_fill(file_list_t *list, bool tab);\n'
+  '/* patches/series, 0115: WebUI drawing helpers */\n',
+  '/* patches/series, 0120: Frame Generation entries */'),
+ ('menu/drivers/xmb.c',
+  '   xmb->categories_active_idx         = 0;\n   xmb->categories_active_idx_old     = 0;\n',
+  '   /* patches/series, 0120: the menu opens on Main Menu, with Frame Generation to its left */\n'
+  '   xmb->categories_selection_ptr      = 1;\n'
+  '   xmb->categories_selection_ptr_old  = 1;\n'
+  '   xmb->categories_active_idx         = 1;\n'
+  '   xmb->categories_active_idx_old     = 1;\n',
+  '/* patches/series, 0120: the menu opens on Main Menu, with Frame Generation to its left */')]
+
 # Changes that are withdrawn rather than deleted, by marker.
 #
 # An entry here names an insertion this driver no longer needs, and the

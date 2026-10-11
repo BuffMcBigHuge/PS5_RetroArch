@@ -273,3 +273,5 @@
 0118  XMB tab icons by system: a playlist with no icon of its own name ("PS2", "Nintendo 3DS") gets the icon of the system src/ps5_library.c recognises in its name, named by database (tools/xmb-system-icons.py); otherwise the default icon, as upstream.
 
 0119  Frame generation: the shader subframes show the frames a trained network (PS5_FrameGen) makes between a content frame and the last, behind the video_framegen setting; sources are compiled by tools/build-retroarch.sh.
+
+0120  Frame generation menus: options in XMB's leftmost tab and RGUI's first main-menu entry (src/ps5_framegen_menu.c), forced cadence, method and working size, status on screen; shared file /app0/config/framegen.cfg.

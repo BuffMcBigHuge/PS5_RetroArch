@@ -5,7 +5,7 @@
  *
  * Armed by /app0/es-de/capture-test.txt (tools/run-title.sh --frontend-capture):
  *
- *     <seconds>[,<seconds>...] <run id> [scroll][,profile][,quit][,launch]
+ *     <seconds>[,<seconds>...] <run id> [scroll][,profile][,quit][,launch][,menu]
  *
  * ES-DE presents each frame with SDL_GL_SwapWindow, which the link wraps
  * (frontends/es-de/link.sh). When a frame is presented that many seconds after
@@ -68,6 +68,8 @@ struct Capture
     bool profile = false;
     bool quit = false;
     bool launch = false;
+    bool menu = false;
+    unsigned menu_presses = 0;
     unsigned launch_presses = 0;
     unsigned long long frames = 0;
     std::chrono::steady_clock::time_point first, last_swap, last_press;
@@ -103,6 +105,7 @@ void read_arm()
     state.scroll = fields == 3 && std::strstr(mode, "scroll") != nullptr;
     state.profile = fields == 3 && std::strstr(mode, "profile") != nullptr;
     state.quit = fields == 3 && std::strstr(mode, "quit") != nullptr;
+    state.menu = fields == 3 && std::strstr(mode, "menu") != nullptr;
     state.launch =
         fields == 3 && std::strstr(mode, "launch") != nullptr && !ps5_esde_started_from_game();
     unsigned last = 0;
@@ -328,6 +331,17 @@ extern "C" void __wrap_SDL_GL_SwapWindow(SDL_Window *window)
     {
         press(SDL_SCANCODE_RETURN, SDLK_RETURN);
         state.launch_presses++;
+    }
+    // "menu": Escape at 6 s opens ES-DE's menu, Return at 10 s opens its first entry
+    // (Frame Generation on the PS5), so captures at 8 and 12 s show both.
+    if (state.menu && state.menu_presses < 2 &&
+        now - state.first >= std::chrono::seconds(6 + 4 * state.menu_presses))
+    {
+        if (state.menu_presses == 0)
+            press(SDL_SCANCODE_ESCAPE, SDLK_ESCAPE);
+        else
+            press(SDL_SCANCODE_RETURN, SDLK_RETURN);
+        state.menu_presses++;
     }
     if (state.scroll && state.next < state.seconds.size() &&
         now - state.first >= std::chrono::seconds(5) &&

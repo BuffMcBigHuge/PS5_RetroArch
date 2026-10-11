@@ -110,6 +110,7 @@ while (( $# )); do
         --frontend-profile) frontend_scroll=${frontend_scroll:+$frontend_scroll,}profile ;;
         --frontend-quit) frontend_scroll=${frontend_scroll:+$frontend_scroll,}quit ;;
         --frontend-launch) frontend_scroll=${frontend_scroll:+$frontend_scroll,}launch ;;
+        --frontend-menu) frontend_scroll=${frontend_scroll:+$frontend_scroll,}menu ;;
         --picker-test=*) picker_test=${1#*=} ;;
         --retroarch-frames=*) retroarch_frames=${1#*=} ;;
         --game=*) game=${1#*=} ;;

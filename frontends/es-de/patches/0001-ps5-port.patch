@@ -145,11 +145,12 @@ diff --git a/es-app/src/guis/GuiMenu.cpp b/es-app/src/guis/GuiMenu.cpp
 index a23c64a..1d602df 100644
 --- a/es-app/src/guis/GuiMenu.cpp
 +++ b/es-app/src/guis/GuiMenu.cpp
-@@ -8,6 +8,9 @@
+@@ -8,6 +8,10 @@
  //
  
  #include "guis/GuiMenu.h"
 +#ifdef __PROSPERO__
++#include "GuiFrameGen.h"
 +#include "GuiWebUI.h"
 +#endif
  
@@ -165,12 +166,16 @@ index a23c64a..1d602df 100644
  #include "utils/LocalizationUtil.h"
  #include "utils/PlatformUtil.h"
  
-@@ -62,7 +67,11 @@ GuiMenu::GuiMenu()
+@@ -62,7 +68,15 @@ GuiMenu::GuiMenu()
      const bool isFullUI {UIModeController::getInstance()->isUIModeFull()};
  
      if (isFullUI)
 +#ifdef __PROSPERO__
++    {
++        addEntry("FRAME GENERATION", mMenuColorPrimary, true,
++                 [this] { mWindow->pushGui(new GuiFrameGen()); });
 +        addEntry("WebUI", mMenuColorPrimary, true, [this] { mWindow->pushGui(new GuiWebUI()); });
++    }
 +#else
          addEntry(_("SCRAPER"), mMenuColorPrimary, true, [this] { openScraperOptions(); });
 +#endif
