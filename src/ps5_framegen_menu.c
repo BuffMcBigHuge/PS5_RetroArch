@@ -182,7 +182,7 @@ void ps5_fg_menu_help(const char *label, char *s, size_t len)
 void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, unsigned height,
       unsigned long generated, unsigned long unique, unsigned level, double gen_ms, unsigned long calls)
 {
-   static unsigned calls;
+   static unsigned osd_calls;
    const unsigned pictures = subframes / (ps5_fg_dup ? ps5_fg_dup : 1);
    static unsigned long presents, last_generated;
    static unsigned long gap_n[2], gap_off[2], last_unique, last_calls;
@@ -279,7 +279,7 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
       last_generated = generated;
       last           = t;
    }
-   if (++calls % 120)
+   if (++osd_calls % 120)
       return;
    ps5_fg_current(&now);
    if (!now.enable)
