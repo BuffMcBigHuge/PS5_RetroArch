@@ -487,21 +487,24 @@ int main(int process_argc, char **process_argv)
         ps5::debug::mark("radv: threaded recording on");
     }
     /* Testing: /app0/framegen-dump.txt (patch 0119) names a folder, and a second line
-     * the number of content frames to let pass first: the frame generator then writes
+     * the number of content frames to let pass first, a third how many to write: the frame generator then writes
      * its first 60 content frames and the frames it made there, raw RGBA8, for scoring. */
     if (std::FILE *dump = std::fopen("/app0/framegen-dump.txt", "r"))
     {
-        char folder[200] = "", skip[16] = "0";
+        char folder[200] = "", skip[16] = "0", count[16] = "60";
         if (std::fgets(folder, sizeof(folder), dump))
         {
             if (std::fgets(skip, sizeof(skip), dump) == nullptr)
                 std::strcpy(skip, "0");
+            else if (std::fgets(count, sizeof(count), dump) == nullptr)
+                std::strcpy(count, "60");
             folder[std::strcspn(folder, "\r\n")] = '\0';
             if (folder[0] != '\0')
             {
                 mkdir(folder, 0777);
                 setenv("PS5_FRAMEGEN_DUMP", folder, 1);
                 setenv("PS5_FRAMEGEN_DUMP_SKIP", skip, 1);
+                setenv("PS5_FRAMEGEN_DUMP_COUNT", count, 1);
                 ps5::debug::mark("framegen: dumping frames");
             }
         }
