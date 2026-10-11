@@ -41,6 +41,8 @@ unsigned ps5_fg_dup = 1;
 float ps5_fg_target_fps = 119.88f;
 /* The instant of the picture the last present showed (1: a real frame), set by the driver */
 float ps5_fg_dbg_t = 1.0f;
+/* 1: the core cannot keep its own rate, so frames are shown as it makes them (the driver reads it) */
+int ps5_fg_floor;
 
 /* The loaded core's frame rate, kept by the video setup (patches/series, 0121) for the driver's cadence check */
 float ps5_fg_core_fps;
@@ -178,13 +180,15 @@ void ps5_fg_menu_help(const char *label, char *s, size_t len)
 
 /* The driver calls this for every present; the message is refreshed about twice a second */
 void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, unsigned height,
-      unsigned long generated, unsigned long unique)
+      unsigned long generated, unsigned long unique, unsigned level, double gen_ms, unsigned long calls)
 {
    static unsigned calls;
    const unsigned pictures = subframes / (ps5_fg_dup ? ps5_fg_dup : 1);
    static unsigned long presents, last_generated;
-   static unsigned long gap_n[2], gap_off[2], last_unique;
-   static double new_per_s;
+   static unsigned long gap_n[2], gap_off[2], last_unique, last_calls;
+   static double new_per_s, calls_per_s;
+   static unsigned slow_windows;
+   static time_t floor_until;
    static double gap_sum[2], gap_max[2];
    static struct timespec last;
    struct ps5_fg_options now;
@@ -238,10 +242,34 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
    if ((t.tv_sec - last.tv_sec) * 1000000000L + (t.tv_nsec - last.tv_nsec) >= 2000000000L)
    {
       double seconds = (double)(t.tv_sec - last.tv_sec) + (double)(t.tv_nsec - last.tv_nsec) / 1e9;
-      new_per_s = (double)(unique - last_unique) / seconds;
+      new_per_s   = (double)(unique - last_unique) / seconds;
+      calls_per_s = (double)(calls - last_calls) / seconds;
       last_unique = unique;
-      RARCH_LOG("[FrameGen] pace: %.1f presents/s, %.1f generated/s, %.1f new frames/s\n", (double)presents / seconds,
-            (double)(generated - last_generated) / seconds, new_per_s);
+      last_calls  = calls;
+      RARCH_LOG("[FrameGen] pace: %.1f presents/s, %.1f generated/s, %.1f new frames/s, core %.1f calls/s, governor level %u (%.2f ms a picture)\n",
+            (double)presents / seconds, (double)(generated - last_generated) / seconds, new_per_s, calls_per_s, level, gen_ms);
+      /* The floor: a core that cannot keep its own rate gains nothing from frames made between its frames, and the work
+       * only slows it more. It is shown as it makes its frames; every ten seconds the generator is tried again. */
+      if (ps5_fg_floor)
+      {
+         if (t.tv_sec >= floor_until)
+         {
+            ps5_fg_floor = 0;
+            slow_windows = 0;
+         }
+      }
+      else if (plan && ps5_fg_core_fps > 20.0f && calls_per_s < 0.85 * (double)ps5_fg_core_fps)
+      {
+         if (++slow_windows >= 2)
+         {
+            ps5_fg_floor = 1;
+            floor_until  = t.tv_sec + 10;
+            RARCH_LOG("[FrameGen] floor: the core runs at %.1f of %.1f frames/s; frames are shown as it makes them for 10 s\n",
+                  calls_per_s, (double)ps5_fg_core_fps);
+         }
+      }
+      else
+         slow_windows = 0;
       RARCH_LOG("[FrameGen] spacing (ms): real n %lu mean %.2f max %.2f off %lu | generated n %lu mean %.2f max %.2f off %lu\n",
             gap_n[0], gap_n[0] ? gap_sum[0] / (double)gap_n[0] : 0.0, gap_max[0], gap_off[0],
             gap_n[1], gap_n[1] ? gap_sum[1] / (double)gap_n[1] : 0.0, gap_max[1], gap_off[1]);
@@ -259,12 +287,15 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
    else if (pictures < 2)
       snprintf(text, sizeof(text), "FrameGen: nothing to make - the game already runs at the Target Framerate (%s)",
             ps5_fg_choice_name(PS5_FG_TARGET, now.target));
+   else if (ps5_fg_floor)
+      snprintf(text, sizeof(text), "FrameGen: core at %.0f fps (needs %.0f), too slow: frames shown as the core makes them",
+            calls_per_s, (double)ps5_fg_core_fps);
    else if (!plan)
       snprintf(text, sizeof(text), "FrameGen: paused (menu, fast-forward or pause)");
    else
-      snprintf(text, sizeof(text), "FrameGen: %s  game %.1f fps (%.1f new/s) -> %.0f fps  cadence %u%s  %ux%u  generated %lu",
+      snprintf(text, sizeof(text), "FrameGen: %s  game %.1f fps (%.1f new/s) -> %.0f fps  cadence %u%s  %ux%u  generated %lu  cost level %u (%.1f ms)",
             ps5_fg_choice_name(PS5_FG_METHOD, now.method), (double)ps5_fg_core_fps, new_per_s, (double)ps5_fg_target_fps,
-            period ? period : 1, now.cadence ? " (forced)" : "", width, height, generated);
+            period ? period : 1, now.cadence ? " (forced)" : "", width, height, generated, level, gen_ms);
    runloop_msg_queue_push(text, strlen(text), 1, 150, false, NULL,
          MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
 }
