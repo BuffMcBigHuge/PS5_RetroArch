@@ -35,6 +35,9 @@
 
 #define PS5_FG_LABEL_FOLDER "ps5_framegen"
 
+/* The loaded core's frame rate, kept by the video setup (patches/series, 0121) for the driver's cadence check */
+float ps5_fg_core_fps;
+
 /* "ps5_fg_3" -> 3; the tab's "ps5_fgt_3" -> 3; anything else -> -1 */
 static int ps5_fg_item_of(const char *label, bool *tab)
 {
@@ -197,7 +200,7 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
       last_generated = generated;
       last           = t;
    }
-   if (++calls % 30)
+   if (++calls % 120)
       return;
    ps5_fg_current(&now);
    if (!now.enable)
@@ -211,8 +214,7 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
       snprintf(text, sizeof(text), "FrameGen: %s  %ux  cadence %u%s  %ux%u  generated %lu",
             ps5_fg_choice_name(PS5_FG_METHOD, now.method), subframes, period ? period : 1,
             now.cadence ? " (forced)" : "", width, height, generated);
-   RARCH_LOG("[FrameGen] %s\n", text);
-   runloop_msg_queue_push(text, strlen(text), 1, 40, true, NULL,
+   runloop_msg_queue_push(text, strlen(text), 1, 150, false, NULL,
          MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
 }
 

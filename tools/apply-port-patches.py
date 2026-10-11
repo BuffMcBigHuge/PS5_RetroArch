@@ -4340,6 +4340,34 @@ EDITS += [('configuration.h',
   '                        if (fg_gap != (vk->framegen_period ? vk->framegen_period : 1))\n'
   '                           vk_framegen_invalidate(vk->framegen);\n',
   'patches/series, 0121: only a steady cadence is interpolated'),
+ ('gfx/drivers/vulkan.c',
+  '                     const unsigned fg_gap = vk->framegen_call + 1;\n',
+  '                     /* patches/series, 0121: the gap in core frames counts frames the core did not hand '
+  'over (a core that\n'
+  '                      * says "unchanged" is not presented at all), so it is also taken from the clock */\n'
+  '                     unsigned fg_gap = vk->framegen_call + 1;\n'
+  '                     {\n'
+  '                        extern float ps5_fg_core_fps;\n'
+  '                        static uint64_t fg_last_ns;\n'
+  '                        struct timespec fg_ts;\n'
+  '                        uint64_t fg_now;\n'
+  '                        clock_gettime(CLOCK_MONOTONIC, &fg_ts);\n'
+  '                        fg_now = (uint64_t)fg_ts.tv_sec * 1000000000ull + (uint64_t)fg_ts.tv_nsec;\n'
+  '                        if (fg_last_ns && ps5_fg_core_fps > 1.0f)\n'
+  '                        {\n'
+  '                           unsigned fg_by_time = (unsigned)((double)(fg_now - fg_last_ns) * '
+  '(double)ps5_fg_core_fps / 1e9 + 0.5);\n'
+  '                           if (fg_by_time > fg_gap)\n'
+  '                              fg_gap = fg_by_time;\n'
+  '                        }\n'
+  '                        fg_last_ns = fg_now;\n'
+  '                     }\n',
+  'patches/series, 0121: the gap in core frames counts frames the core did not hand over'),
+ ('gfx/drivers/vulkan.c',
+  'extern unsigned long ps5_fg_size_pixels_of(unsigned size); /* patches/series, 0120 */\n',
+  '#include <time.h> /* patches/series, 0121 */\n'
+  'extern unsigned long ps5_fg_size_pixels_of(unsigned size); /* patches/series, 0120 */\n',
+  '#include <time.h> /* patches/series, 0121 */'),
  ('retroarch.c',
   '   unsigned shader_subframes              = settings->uints.video_shader_subframes;\n'
   '   bool vrr_runloop_enable                = settings->bools.vrr_runloop_enable;\n'
@@ -4347,6 +4375,7 @@ EDITS += [('configuration.h',
   '   /* patches/series, 0121: Output Rate Auto: the presents per game frame that fill the display (the rate '
   'of the mode\n'
   '    * the video output really runs in, which the port keeps in vulkan_ps5_display_refresh_x1000) */\n'
+  '   { extern float ps5_fg_core_fps; ps5_fg_core_fps = (float)input_fps; }\n'
   '   if (settings->bools.video_framegen && settings->bools.video_framegen_auto && input_fps > 20.0)\n'
   '   {\n'
   '      extern unsigned vulkan_ps5_display_refresh_x1000;\n'
