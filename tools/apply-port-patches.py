@@ -4395,8 +4395,13 @@ EDITS += [('configuration.h',
   '         {\n'
   '            extern int ps5_fg_active;\n'
   '            extern float ps5_fg_presents_per_s;\n'
+  '            extern float ps5_fg_base_fps;\n'
+  '            const float new_fps = last_fps;\n'
+  '            ps5_fg_base_fps = new_fps;\n'
   '            if (ps5_fg_active && ps5_fg_presents_per_s > 1.0f)\n'
   '               last_fps = ps5_fg_presents_per_s;\n'
+  '            RARCH_LOG("[FrameGen] counter: shows %.1f (the core made %.1f new frames a second, generation %s)\\n", last_fps, new_fps,\n'
+  '                  ps5_fg_active ? "on" : "off");\n'
   '         }\n'
   '         new_frames   = 0;\n',
   'patches/series, 0121: with frame generation on, the rate shown'),
@@ -4561,6 +4566,22 @@ EDITS += [('gfx/drivers/vulkan.c',
   '                  && !(vk->context->swap_interval > 1);\n',
   '                  && !(vk->context->swap_interval > 1)\n                  && !ps5_fg_floor; /* patches/series, 0121: a core too slow for its own rate is shown as it is */\n',
   '&& !ps5_fg_floor; /* patches/series, 0121')]
+
+
+# The FPS line with frame generation on: the game's own rate and the rate with frames generated (patches/series, 0121)
+EDITS += [('gfx/video_driver.c',
+  '         _len                  += snprintf(\n               status_text         + _len,\n               sizeof(status_text) - _len,\n               "%6.2f", last_fps);\n',
+  '         {\n'
+  '            /* patches/series, 0121: with frame generation on, both rates are named */\n'
+  '            extern int ps5_fg_active;\n'
+  '            extern float ps5_fg_base_fps;\n'
+  '            if (ps5_fg_active && ps5_fg_base_fps > 0.0f)\n'
+  '               _len += snprintf(status_text + _len, sizeof(status_text) - _len,\n'
+  '                     "Base %.1f | FrameGen %.1f", ps5_fg_base_fps, last_fps);\n'
+  '            else\n'
+  '               _len += snprintf(status_text + _len, sizeof(status_text) - _len, "%6.2f", last_fps);\n'
+  '         }\n',
+  'Base %.1f | FrameGen %.1f')]
 
 # Changes that are withdrawn rather than deleted, by marker.
 #

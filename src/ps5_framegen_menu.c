@@ -46,6 +46,7 @@ int ps5_fg_floor;
 /* For the FPS counter (gfx/video_driver.c): 1 while frames are being generated; the presents a second over the last window */
 int ps5_fg_active;
 float ps5_fg_presents_per_s;
+float ps5_fg_base_fps;    /* the core's own new frames a second, as the FPS line last measured them */
 
 /* The loaded core's frame rate, kept by the video setup (patches/series, 0121) for the driver's cadence check */
 float ps5_fg_core_fps;
