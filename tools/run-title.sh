@@ -400,6 +400,15 @@ with connect(**dt.load_settings()) as ftp:
     for name in sorted(list_names(ftp, f"/data/homebrew/{sys.argv[1]}")):
         if name.startswith("pad-shot-") and name.endswith(".png"):
             remove_if_present(ftp, f"/data/homebrew/{sys.argv[1]}/{name}")
+        # (the present-stream recorder's folders: the script's RECORD writes /app0/rec-<n>/)
+        if name.startswith("rec-"):
+            folder = f"/data/homebrew/{sys.argv[1]}/{name}"
+            for leaf in sorted(list_names(ftp, folder)):
+                remove_if_present(ftp, f"{folder}/{leaf}")
+            try:
+                ftp.rmd(folder)
+            except Exception:
+                pass
     if sys.argv[14]:
         with open(sys.argv[14], "rb") as script:
             ftp.storbinary(f"STOR /data/homebrew/{sys.argv[1]}/pad-script.txt", script)
@@ -571,6 +580,19 @@ with connect(**dt.load_settings()) as ftp:
         with (out / name).open("wb") as stream:
             ftp.retrbinary(f"RETR {base}/{name}", stream.write)
         remove_if_present(ftp, f"{base}/{name}")
+    # The present-stream recorder's recordings (tools/analyze-stream.py reads them)
+    recs = sorted(name for name in list_names(ftp, base) if name.startswith("rec-"))
+    for name in recs:
+        (out / name).mkdir(exist_ok=True)
+        for leaf in sorted(list_names(ftp, f"{base}/{name}")):
+            with (out / name / leaf).open("wb") as stream:
+                ftp.retrbinary(f"RETR {base}/{name}/{leaf}", stream.write)
+            remove_if_present(ftp, f"{base}/{name}/{leaf}")
+        try:
+            ftp.rmd(f"{base}/{name}")
+        except Exception:
+            pass
+        print(f"    recording {name}: saved to {out / name} (tools/analyze-stream.py {out / name})")
 print(f"    pad script: {len(shots)} picture(s) saved to {out}")
 PY
 fi

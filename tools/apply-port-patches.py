@@ -4643,6 +4643,15 @@ WITHDRAWN = (
 )
 
 
+# Frame generation, the present-stream recorder: a copy of each picture just before it is presented (patches/series, 0121)
+EDITS += [('gfx/drivers/vulkan.c',
+  "      /* End the render pass. We're done rendering to backbuffer now. */\n      vkCmdEndRenderPass(vk->cmd);\n",
+  "      /* End the render pass. We're done rendering to backbuffer now. */\n      vkCmdEndRenderPass(vk->cmd);\n"
+  "      if (vk->framegen) /* patches/series, 0121: the present-stream recorder */\n"
+  "         vk_framegen_record(vk->framegen, vk->cmd, backbuffer->image, vk->context->swapchain_width, vk->context->swapchain_height);\n",
+  'patches/series, 0121: the present-stream recorder */')]
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print(__doc__.splitlines()[2].strip(), file=sys.stderr)
@@ -4706,3 +4715,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

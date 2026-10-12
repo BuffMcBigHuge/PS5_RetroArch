@@ -51,7 +51,9 @@
  * thread about 20 s). `<seconds> MARK`
  * prints how many new frames the core has made and the longest gap between
  * two since the last MARK, so a run's frame rate is read over exact script
- * times. RUMBLE_STRONG and RUMBLE_WEAK take a strength (0..65535) and exercise
+ * times. `<seconds> RECORD <n>` records the next n pictures the display is given (the
+ * real frames and the generated ones, default 240, at most 2000) to /app0/rec-<k>/ as
+ * small raw frames with an index of when each was shown. RUMBLE_STRONG and RUMBLE_WEAK take a strength (0..65535) and exercise
  * controller feedback; send 0 to stop. `<seconds> MENU` prints where the menu
  * is: the list on top of its stack (label and path), the selected entry and the
  * pending selection, which pictures cannot show (SCREENSHOT leaves the XMB out
@@ -226,6 +228,7 @@ constexpr int stick_centre = 128;
 } // namespace
 
 extern "C" void ps5_input_trace(const char *line) noexcept;
+extern "C" void ps5_fg_record_request(unsigned pictures);   /* PS5_FrameGen, gfx/vulkan_framegen.cpp */
 
 namespace
 {
@@ -329,6 +332,7 @@ enum class ScriptActionKind
     rumble_strong,
     rumble_weak,
     menu,
+    record,
 };
 // The core's new frames (gfx/video_driver.c, patches/series 0101), the
 // longest time between two of them since the last MARK and how many came more
@@ -402,7 +406,8 @@ void load_script() noexcept
                             {"MARK", ScriptActionKind::mark},
                             {"RUMBLE_STRONG", ScriptActionKind::rumble_strong},
                             {"RUMBLE_WEAK", ScriptActionKind::rumble_weak},
-                            {"MENU", ScriptActionKind::menu}};
+                            {"MENU", ScriptActionKind::menu},
+                            {"RECORD", ScriptActionKind::record}};
         // OPTION key value: set a core option as the Quick Menu does (the core
         // sees it as an update at its next frame)
         if (std::strcmp(buttons, "OPTION") == 0 && action_count < action_capacity)
@@ -1128,6 +1133,17 @@ void run_script_actions() noexcept
             char note[128];
             std::snprintf(note, sizeof(note), "input: pad script SCREENSHOT at %.2f s: %s %d",
                           seconds, path, ok ? 1 : 0);
+            ps5_input_trace(note);
+            continue;
+        }
+        if (action.kind == ScriptActionKind::record)
+        {
+            // The present-stream recorder (PS5_FrameGen, gfx/vulkan_framegen.cpp): the next pictures the display is given,
+            // written to /app0/rec-<n> when the window is full
+            const unsigned pictures = action.slot > 0 ? static_cast<unsigned>(action.slot) : 240u;
+            ps5_fg_record_request(pictures);
+            char note[96];
+            std::snprintf(note, sizeof(note), "input: pad script RECORD %u pictures at %.2f s", pictures, seconds);
             ps5_input_trace(note);
             continue;
         }
