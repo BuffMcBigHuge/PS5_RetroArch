@@ -125,36 +125,6 @@ function pspCoreHelp(key) {
 
 // Help for options whose core table supplies a label but no explanation.
 const otherCoreHelp = {
-  pcsx2_bios: 'Name of the PS2 BIOS to use. Available BIOS choices are detected when the core starts; leave empty to use its automatic selection.',
-  pcsx2_renderer: 'Choose how PS2 graphics are drawn. Auto lets the core select its renderer; a different backend must be supported by this PS5 build.',
-  pcsx2_upscale_multiplier: 'Render 3D graphics at a higher resolution for a sharper image. Higher values use more memory and can slow games down. Restart required.',
-  pcsx2_texture_filtering: 'Choose whether textures keep sharp pixel edges or use smoother bilinear filtering. The PS2 option follows the game’s own requests.',
-  pcsx2_trilinear_filtering: 'Smooth transitions between texture detail levels. Automatic follows the game; forcing it can change the original appearance.',
-  pcsx2_anisotropic_filtering: 'Keep textures clearer when viewed at an angle, such as roads and floors. Higher levels require more graphics work.',
-  pcsx2_dithering: 'Reproduce the PS2’s pattern of pixels used to blend limited colors. Scaled adapts the pattern to the internal resolution.',
-  pcsx2_blending_accuracy: 'Increase the accuracy of transparency and color blending. Higher accuracy can fix effects but costs performance.',
-  pcsx2_pcrtc_screen_offsets: 'Respect the screen position offsets requested by the game. This can correct alignment or borders.',
-  pcsx2_disable_interlace_offset: 'Remove the offset used for interlaced fields. Use this workaround only for a game with an interlacing alignment issue.',
-  pcsx2_auto_flush_software: 'Flush graphics work automatically in the software renderer. This can fix rendering issues at a performance cost.',
-  pcsx2_ee_cycle_rate: 'Change the speed of the emulated PS2 CPU. Underclocking may improve performance but can reduce the game’s frame rate; overclocking adds CPU work.',
-  pcsx2_ee_cycle_skip: 'Skip emulated CPU cycles to reduce workload. This speed workaround can cause stutter or incorrect game behavior.',
-  pcsx2_cpu_sprite_size: 'Set the size limit for sprites drawn using the CPU. This is a game-specific graphics workaround; zero disables it.',
-  pcsx2_cpu_sprite_level: 'Choose which small graphics primitives use CPU sprite rendering. Broader coverage can fix a game but costs more CPU time.',
-  pcsx2_software_clut_render: 'Render color palette updates in software. Use this to correct palette effects in games that need the workaround.',
-  pcsx2_gpu_target_clut: 'Choose when a graphics render target can supply a color palette. This changes palette handling for compatibility.',
-  pcsx2_auto_flush: 'Flush pending drawing before certain texture reads. This can fix effects that reuse the image being drawn, at a performance cost.',
-  pcsx2_texture_inside_rt: 'Allow a texture to be read from inside an existing render target. This is a compatibility workaround for games that reuse framebuffer data.',
-  pcsx2_disable_depth_conversion: 'Skip conversions involving the depth buffer. It may help specific games but can break depth-dependent effects.',
-  pcsx2_framebuffer_conversion: 'Enable an alternate framebuffer conversion path. Use only when a game needs it to correct graphics.',
-  pcsx2_disable_partial_invalidation: 'Keep partial texture cache entries instead of invalidating them. This workaround may fix one game while producing stale graphics in another.',
-  pcsx2_gpu_palette_conversion: 'Convert indexed color palettes on the GPU. This changes how palette textures are handled and can affect compatibility.',
-  pcsx2_preload_frame_data: 'Load existing framebuffer data before drawing. This can fix missing effects but increases graphics work.',
-  pcsx2_half_pixel_offset: 'Adjust texture coordinates to correct half-pixel alignment at higher resolutions. Use the mode required by a specific game.',
-  pcsx2_round_sprite: 'Round sprite coordinates to reduce gaps or misalignment when upscaling. Stronger modes can alter some graphics.',
-  pcsx2_align_sprite: 'Adjust sprite alignment to reduce seams when upscaling. This is a game-specific graphics workaround.',
-  pcsx2_merge_sprite: 'Combine adjacent sprites to reduce upscaling seams. Some games require this workaround; others may show incorrect graphics.',
-  pcsx2_unscaled_palette_draw: 'Draw palette textures at native resolution to avoid upscaling errors in their colors.',
-  pcsx2_force_sprite_position: 'Force sprite positions to even coordinates. Use for games with sprite alignment problems at higher resolutions.',
   mame_thread_mode: 'Run MAME’s emulation on a separate thread. This changes how work is scheduled and may affect performance or compatibility.',
   mame_cheats_enable: 'Enable MAME’s cheat support. Cheat files must be available for the selected game.',
   mame_throttle: 'Let MAME limit emulation speed to the original machine’s speed. Timing also depends on RetroArch’s synchronization settings.',
@@ -189,11 +159,6 @@ const otherCoreHelp = {
   vice_mapping_options_display: 'Show the extra button mapping options in RetroArch’s on-console core menu. They remain grouped in the WebUI.'
 };
 function coreHelp(key) {
-  if (/^pcsx2_axis_deadzone[12]$/.test(key)) return 'Ignore small stick movements near the center to prevent drift. Larger values require more movement before input begins.';
-  if (/^pcsx2_button_deadzone[12]$/.test(key)) return 'Ignore light trigger pressure below this threshold. Increase it if a trigger activates unintentionally.';
-  if (/^pcsx2_axis_scale[12]$/.test(key)) return 'Adjust analog stick sensitivity. Higher values reach full input with less stick movement.';
-  if (/^pcsx2_invert_(left|right)_stick[12]$/.test(key)) return 'Reverse the selected horizontal or vertical stick directions.';
-  if (/^pcsx2_enable_rumble[12]$/.test(key)) return 'Set controller vibration strength for this PS2 controller port. Off disables vibration.';
   if (/^snes9x_layer_[1-5]$/.test(key)) return 'Show this SNES graphics layer. Turning it off hides part of the picture and is mainly useful for inspecting graphics.';
   if (/^snes9x_sndchan_volume_[1-8]$/.test(key)) return 'Adjust the volume of this individual SNES sound channel. Zero mutes it; 100 keeps its original level.';
   if (key.startsWith('vice_mapper_')) return 'Choose the Commodore key or emulator action assigned to this control. The unmapped choice removes its assignment.';

@@ -392,15 +392,18 @@
       "modifications": "patches/dolphin/ps5-port.patch (PS5_RetroArch)."
     },
     {
-      "id": "lrps2",
-      "name": "LRPS2 (PCSX2, PlayStation 2)",
+      "id": "ps5sx2",
+      "name": "PS5SX2 (PCSX2 for the PS5, PlayStation 2) and its game database",
       "kind": "code",
-      "artifacts": ["cores/pcsx2_libretro.so"],
-      "licence": "GPL-3.0-or-later",
-      "copyright": ["Copyright the PCSX2 Dev Team and contributors"],
-      "texts": [{"from": ".deps/lrps2-src/COPYING.GPLv3", "to": "COPYING.GPLv3"}],
-      "source": {"kind": "core", "build": "lrps2", "tree": ".deps/lrps2-src", "remote": "https://github.com/mihawk-99/PS5_LRPS2"},
-      "modifications": "The fork's commits over libretro/ps2."
+      "artifacts": ["cores/ps5sx2_libretro.so", "system/ps5sx2/**"],
+      "licence": "GPL-3.0-or-later (rapidyaml MIT, glslang BSD-3-Clause and others, AMD FidelityFX MIT)",
+      "copyright": ["Copyright the PCSX2 Dev Team and contributors", "Copyright Swordpdf (PS5SX2)"],
+      "texts": [{"from": ".deps/ps5sx2-src/COPYING.GPLv3", "to": "COPYING.GPLv3"},
+                {"from": ".deps/ps5sx2/ryml/LICENSE.txt", "to": "LICENSE.rapidyaml.txt"},
+                {"from": ".deps/ps5sx2/glslang/LICENSE.txt", "to": "LICENSE.glslang.txt"},
+                {"from": ".deps/ps5sx2-src/ps5/coreorbis/orbis-shims/framegen/LICENSE.txt", "to": "LICENSE.framegen.txt"}],
+      "source": {"kind": "core", "build": "ps5sx2", "tree": ".deps/ps5sx2-src", "remote": "https://github.com/mihawk-99/Libretro_PS5SX2"},
+      "modifications": "The fork's libretro branch over Swordpdf/PS5SX2 (ps5/libretro, the LIBRETRO hooks in GSDeviceVK and VKLoader)."
     },
     {
       "id": "beetle-psx",

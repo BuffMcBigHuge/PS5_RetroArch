@@ -58,10 +58,10 @@ bash "$root/tools/setup-native-dependencies.sh" >/dev/null
     exit 2
 }
 
-core_names=(fceumm mgba snes9x fbneo genesis_plus_gx ppsspp dolphin pcsx2
+core_names=(fceumm mgba snes9x fbneo genesis_plus_gx ppsspp dolphin
     mednafen_psx_hw mupen64plus_next mednafen_saturn vice_x64sc desmume azahar mame flycast
     picodrive mednafen_pce mednafen_pcfx mednafen_vb mednafen_ngp mednafen_wswan pokemini
-    handy virtualjaguar stella a5200 prosystem dosbox_pure opera puae neocd scummvm)
+    handy virtualjaguar stella a5200 prosystem dosbox_pure opera puae neocd scummvm ps5sx2)
 # RPCS3 is not part of the title by default, console builds included: PS3 is no
 # longer a target (2026-10-04), so no deployment puts it on a console.
 # tools/build-rpcs3.sh still builds the core on this machine, and PS5_WITH_RPCS3=1
@@ -93,7 +93,6 @@ core_files=()
 for core_name in "${core_names[@]}"; do
     # Each library keeps its libretro name; the build script is the port's.
     case $core_name in
-        pcsx2) script=lrps2 ;;
         mednafen_psx_hw) script=beetle-psx ;;
         mednafen_saturn) script=beetle-saturn ;;
         mednafen_pce) script=beetle-pce ;;
@@ -397,6 +396,9 @@ cp -a -- "$root/config/retroarch.cfg" "$dist/retroarch.cfg"
 # The legal notice (no piracy; RPCS3 only built from source) at the top of the
 # title folder, where a person unpacking a release sees it first.
 cp -a -- "$root/config/LEGAL.txt" "$dist/LEGAL.txt"
+# Only the cores this build ships: a core taken out of the list (LRPS2, 2026-10-12) must
+# not linger in dist/ from an earlier build.
+rm -rf -- "$dist/cores" "$dist/info"
 mkdir -p "$dist/cores" "$dist/info"
 for core_name in "${core_names[@]}"; do
     cp -- "$root/build/cores/stage/cores/${core_name}_libretro.so" "$dist/cores/"
@@ -434,6 +436,14 @@ if [[ -d $root/build/cores/stage/system/dolphin-emu ]]; then
     cp -a -- "$root/build/cores/stage/system/dolphin-emu" "$dist/system/dolphin-emu"
     printf '==> [title] staged Dolphin Sys: %s files in %s/system/dolphin-emu\n' \
         "$(find "$dist/system/dolphin-emu" -type f | wc -l)" "$dist"
+fi
+
+# PS5SX2 reads PCSX2's game database from <system>/ps5sx2/resources (its per-game fixes).
+if [[ -d $root/build/cores/stage/system/ps5sx2 ]]; then
+    mkdir -p "$dist/system"
+    rm -rf -- "$dist/system/ps5sx2/resources"
+    mkdir -p "$dist/system/ps5sx2"
+    cp -a -- "$root/build/cores/stage/system/ps5sx2/resources" "$dist/system/ps5sx2/resources"
 fi
 
 # RPCS3's folder is <system>/RPCS3, which also holds what RPCS3 writes there on

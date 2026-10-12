@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     core(dir, "mgba", "Nintendo - Game Boy|Nintendo - Game Boy Color|Nintendo - Game Boy Advance",
          "gb|gbc|gba");
     core(dir, "mednafen_psx_hw", "Sony - PlayStation", "cue|bin|chd");
-    core(dir, "pcsx2", "Sony - PlayStation 2", "iso|chd");
+    core(dir, "ps5sx2", "Sony - PlayStation 2", "iso|chd");
     core(dir, "fbneo", "FBNeo - Arcade Games", "zip|7z");
     core(dir, "mame", "MAME", "zip|7z");
     snprintf(path, sizeof(path), "%s/info/missing_libretro.info", dir); /* info without a core */
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
                "{\"path\": \"/app0/content/Homebrew/demo.bin\", \"label\": \"Demo\","
                " \"core_path\": \"DETECT\", \"db_name\": \"content.lpl\"}\n]}\n");
     snprintf(path, sizeof(path), "%s/playlists/PS2.lpl", dir);
-    snprintf(path + 1024, 1024, "%s/cores/pcsx2_libretro.so", dir);
+    snprintf(path + 1024, 1024, "%s/cores/ps5sx2_libretro.so", dir);
     {
         char text[4096];
         snprintf(text, sizeof(text),

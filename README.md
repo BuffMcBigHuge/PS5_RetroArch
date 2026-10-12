@@ -122,7 +122,7 @@ Stay connected while switching between the picker, RetroArch, and EmulationStati
 |  | <img src="webui/assets/systems/virtualboy.webp" width="40" height="40" alt=""> **Virtual Boy** | Beetle VB | Software |
 |  | <img src="webui/assets/systems/pokemini.webp" width="40" height="40" alt=""> **Pokémon Mini** | PokeMini | Software |
 | **Sony** | <img src="webui/assets/systems/psx.webp" width="40" height="40" alt=""> **PlayStation** | Beetle PSX HW | Vulkan (GPU) |
-|  | <img src="webui/assets/systems/ps2.webp" width="40" height="40" alt=""> **PlayStation 2** | LRPS2 | Vulkan (GPU) |
+|  | <img src="webui/assets/systems/ps2.webp" width="40" height="40" alt=""> **PlayStation 2** | PS5SX2 | Vulkan (GPU) |
 |  | <img src="webui/assets/systems/psp.webp" width="40" height="40" alt=""> **PlayStation Portable** | PPSSPP | Vulkan (GPU) |
 | **Sega** | <img src="webui/assets/systems/genesis.webp" width="40" height="40" alt=""> **Mega Drive / Genesis**<br><img src="webui/assets/systems/mastersystem.webp" width="40" height="40" alt=""> **Master System**<br><img src="webui/assets/systems/gamegear.webp" width="40" height="40" alt=""> **Game Gear**<br><img src="webui/assets/systems/sg-1000.webp" width="40" height="40" alt=""> **SG-1000**<br><img src="webui/assets/systems/segacd.webp" width="40" height="40" alt=""> **Sega CD** | Genesis Plus GX | Software |
 |  | <img src="webui/assets/systems/sega32x.webp" width="40" height="40" alt=""> **Sega 32X** | PicoDrive | Software |
@@ -174,7 +174,7 @@ core, folder and game options take priority over these compiled defaults.
 | --- | --- | --- |
 | PPSSPP | 6× · 2880 × 1632 | 8× MSAA |
 | Dolphin | 4× | No MSAA |
-| LRPS2 | 4× · approximately 1440p | Core default |
+| PS5SX2 | 4× · approximately 1440p (up to 8×; 6× is 4K) | Core default |
 | Beetle PSX HW | 8× | MSAA off |
 | Mupen64Plus-Next | 4× | Core default |
 | Azahar | 6× · 2400 × 1440 top screen | Core default |
@@ -293,7 +293,7 @@ workspace/
 ```
 
 The cores that needed changes for the console build from my forks of them
-([PS5_LRPS2](https://github.com/mihawk-99/PS5_LRPS2),
+([Libretro_PS5SX2](https://github.com/mihawk-99/Libretro_PS5SX2),
 [PS5_BeetlePSX](https://github.com/mihawk-99/PS5_BeetlePSX),
 [PS5_Mupen64Plus](https://github.com/mihawk-99/PS5_Mupen64Plus),
 [PS5_BeetleSaturn](https://github.com/mihawk-99/PS5_BeetleSaturn),
@@ -355,7 +355,7 @@ bash tools/build-title.sh     # Build/stage the frontend and all shipped cores
 make genesis-plus-gx         # Build and ABI-check one core only
 # Other core targets: fceumm, mgba, snes9x, fbneo
 bash tools/build-ppsspp.sh   # The larger cores have scripts of their own:
-                             # build-ppsspp.sh, build-dolphin.sh, build-lrps2.sh,
+                             # build-ppsspp.sh, build-dolphin.sh, build-ps5sx2.sh,
                              # build-beetle-psx.sh, build-mupen64plus.sh,
                              # build-beetle-saturn.sh, build-vice.sh,
                              # build-mame.sh, build-desmume.sh, build-azahar.sh,
@@ -417,7 +417,7 @@ Color icons: **Microsoft Fluent Color**. System artwork: **Linear ES-DE**. Regio
 | [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) | Charles MacDonald, Eke-Eke and contributors |
 | [PPSSPP](https://github.com/hrydgard/ppsspp) | Henrik Rydgård and contributors |
 | [Dolphin](https://github.com/dolphin-emu/dolphin), [libretro/dolphin](https://github.com/libretro/dolphin) | Dolphin Emulator Project and contributors; libretro core maintainers |
-| [PCSX2](https://github.com/PCSX2/pcsx2), [LRPS2](https://github.com/libretro/LRPS2) | PCSX2 Dev Team and contributors; libretro LRPS2 maintainers |
+| [PCSX2](https://github.com/PCSX2/pcsx2), [PS5SX2](https://github.com/Swordpdf/PS5SX2) | PCSX2 Dev Team and contributors; Swordpdf (PS5SX2) |
 | [Beetle PSX HW](https://github.com/libretro/beetle-psx-libretro), [Beetle Saturn](https://github.com/libretro/beetle-saturn-libretro) | The Mednafen authors and contributors; libretro Beetle maintainers |
 | [Mupen64Plus-Next](https://github.com/libretro/mupen64plus-libretro-nx) | Mupen64Plus team and contributors; libretro core maintainers; ParaLLEl-RDP and ParaLLEl-RSP by Hans-Kristian Arntzen (Themaister) and contributors |
 | [VICE](https://github.com/libretro/vice-libretro) | The VICE Team and contributors; libretro core maintainers |
@@ -467,7 +467,7 @@ The cores keep their own licences, and they differ:
 | Licence | Cores |
 | --- | --- |
 | GPL-2.0-or-later | FCEUmm, PPSSPP, Dolphin, Beetle PSX HW, Beetle Saturn, Mupen64Plus-Next (with MIT and LGPL parts), VICE, DeSmuME, Azahar (Dynarmic is 0BSD), Flycast, Beetle PCE, Beetle PC-FX, Beetle VB, Beetle NeoPop, Beetle Cygne, Stella, a5200, ProSystem, DOSBox Pure, PUAE, MAME (as a whole; many files BSD-3-Clause) |
-| GPL-3.0-or-later | LRPS2 (PCSX2), PokeMini, Virtual Jaguar, ScummVM |
+| GPL-3.0-or-later | PS5SX2 (PCSX2), PokeMini, Virtual Jaguar, ScummVM |
 | LGPL-3.0-or-later | NeoCD |
 | Zlib | Handy |
 | MPL-2.0 | mGBA |

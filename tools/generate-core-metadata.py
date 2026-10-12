@@ -20,7 +20,6 @@ CORES = [
     ('desmume', 'DeSmuME', '.deps/desmume-src/desmume/src/frontend/libretro/libretro_core_options.h', ['HAVE_JIT']),
     ('mednafen_psx_hw', 'Beetle PSX HW', '.deps/beetle-psx-src/libretro_core_options.h', ['HAVE_HW','HAVE_VULKAN']),
     ('mednafen_saturn', 'Beetle Saturn', '.deps/beetle-saturn-src/libretro_core_options.h', []),
-    ('pcsx2', 'LRPS2', '.deps/lrps2-src/libretro/libretro_core_options.h', []),
     ('mame', 'MAME', '.deps/mame-src/src/osd/libretro/libretro-internal/libretro_core_options.h', ['CORE_NAME="mame"']),
     ('mupen64plus_next', 'Mupen64Plus-Next', '.deps/mupen64plus-src/libretro/libretro_core_options.h', ['CORE_NAME="mupen64plus"','HAVE_PARALLEL_RDP','HAVE_PARALLEL_RSP','HAVE_THR_AL','HAVE_LLE','DYNAREC']),
     ('fceumm', 'FCEUmm', 'build/cores/fceumm/src/drivers/libretro/libretro_core_options.h', ['HAVE_NTSC_FILTER','HAVE_HDPACK']),
@@ -51,10 +50,12 @@ CORES = [
     ('scummvm', 'ScummVM', '.deps/scummvm-src/backends/platform/libretro/include/libretro-core-options.h', ['USE_HIGHRES']),  # Makefile.common's default, kept for ps5
     ('stella', 'Stella', '.deps/stella-src/src/os/libretro/libretro.cxx', []),
     ('virtualjaguar', 'Virtual Jaguar', '.deps/virtualjaguar-src/libretro_core_options.h', []),
+    # PS5SX2 (tools/build-ps5sx2.sh): its options are in the fork's libretro layer.
+    ('ps5sx2', 'PS5SX2', '.deps/ps5sx2-src/ps5/libretro/libretro_core_options.h', []),
 ]
 # Cores whose tables are found by name (the English ones), not named in extract().
 NAMED = {'fbneo', 'dolphin', 'azahar', 'fceumm', 'ppsspp', 'desmume', 'mednafen_psx_hw',
-         'mednafen_saturn', 'pcsx2', 'mame', 'mupen64plus_next', 'genesis_plus_gx', 'snes9x',
+         'mednafen_saturn', 'mame', 'mupen64plus_next', 'genesis_plus_gx', 'snes9x',
          'mgba', 'vice_x64sc'}
 
 def blocks(text, opening):

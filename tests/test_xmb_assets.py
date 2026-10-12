@@ -71,6 +71,37 @@ class XmbSystemIcons(unittest.TestCase):
             self.assertTrue(owns('xmb-system-icons', path) and not owns('retroarch-assets', path), path)
 
 
+    def test_other_playlist_names_find_their_system_icon(self):
+        """Patch 0118: a playlist named "PS2" or "Nintendo 3DS" (a manual scan's custom
+        name) shows the icon the build made for its system's database."""
+        import sys
+        import tempfile
+        sys.path.insert(0, str(ROOT / 'tools'))
+        generator = __import__('importlib').import_module('xmb-system-icons')
+        databases = {database for _, database in generator.platforms()}
+        names = ['PS2', 'PSP', 'Nintendo 3DS', 'MAME', 'SNES', 'Sega Genesis', 'content', 'Favorites']
+        code = '#include <stdio.h>\n#include "ps5_library.h"\n' \
+               'int sceSystemServiceLoadExec(const char *p, const char *const *a) { (void)p; (void)a; return -1; }\n' \
+               'int main(int c, char **v) {\n' \
+               '  for (int i = 1; i < c; i++) { const char *d = ps5_library_platform_database(ps5_library_platform(v[i]));\n' \
+               '    printf("%s\\n", d ? d : "-"); }\n  return 0;\n}\n'
+        with tempfile.TemporaryDirectory() as temp:
+            (Path(temp) / 'names.c').write_text(code)
+            subprocess.run(['cc', '-std=c11', '-Isrc', str(Path(temp) / 'names.c'), 'src/ps5_library.c', 'src/ps5_game.c',
+                            '-o', str(Path(temp) / 'names')], cwd=ROOT, check=True)
+            found = subprocess.check_output([str(Path(temp) / 'names'), *names], cwd=ROOT, text=True).split('\n')[:-1]
+        expected = {'PS2': 'Sony - PlayStation 2', 'PSP': 'Sony - PlayStation Portable',
+                    'Nintendo 3DS': 'Nintendo - Nintendo 3DS', 'MAME': 'MAME',
+                    'SNES': 'Nintendo - Super Nintendo Entertainment System',
+                    'Sega Genesis': 'Sega - Mega Drive - Genesis', 'content': '-', 'Favorites': '-'}
+        self.assertEqual(dict(zip(names, found)), expected)
+        for database in expected.values():
+            if database != '-':
+                self.assertIn(database, databases)
+        patch = (ROOT / 'tools/apply-port-patches.py').read_text()
+        self.assertIn('patches/series, 0118: a playlist named otherwise', patch)
+
+
 class XmbGeometry(unittest.TestCase):
     def test_strip_expansion_preserves_triangles_and_bounds(self):
         """Execute the port's C mapping, including the 8,064-vertex ribbon."""

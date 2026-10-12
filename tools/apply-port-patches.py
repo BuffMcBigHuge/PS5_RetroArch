@@ -147,7 +147,7 @@ static void ps5_core_option_default(struct core_option *option)
       { "ppsspp_internal_resolution", "2880x1632" },
       { "ppsspp_mulitsample_level", "x8" },
       { "dolphin_efb_scale", "4" },
-      { "pcsx2_upscale_multiplier", "4x Native (~1440p/2K)" },
+      { "ps5sx2_upscale", "4" },
       { "beetle_psx_hw_internal_resolution", "8x" },
       { "beetle_psx_hw_msaa", "1x" },
       { "citra_resolution_factor", "6" },
