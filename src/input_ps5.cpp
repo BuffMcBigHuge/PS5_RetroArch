@@ -53,9 +53,9 @@
  * two since the last MARK, so a run's frame rate is read over exact script
  * times. `<seconds> RECORD <n>` records the next n pictures the display is given (the
  * real frames and the generated ones, default 240, at most 2000) to /app0/rec-<k>/ as
- * small raw frames with an index of when each was shown. RUMBLE_STRONG and RUMBLE_WEAK take a strength (0..65535) and exercise
- * controller feedback; send 0 to stop. `<seconds> MENU` prints where the menu
- * is: the list on top of its stack (label and path), the selected entry and the
+ * small raw frames with an index of when each was shown. RUMBLE_STRONG and RUMBLE_WEAK take a
+ * strength (0..65535) and exercise controller feedback; send 0 to stop. `<seconds> MENU` prints
+ * where the menu is: the list on top of its stack (label and path), the selected entry and the
  * pending selection, which pictures cannot show (SCREENSHOT leaves the XMB out
  * when no content runs). Testing only: the file is never shipped.
  *
@@ -228,7 +228,8 @@ constexpr int stick_centre = 128;
 } // namespace
 
 extern "C" void ps5_input_trace(const char *line) noexcept;
-extern "C" void ps5_fg_record_request(unsigned pictures);   /* PS5_FrameGen, gfx/vulkan_framegen.cpp */
+extern "C" void
+ps5_fg_record_request(unsigned pictures); /* PS5_FrameGen, gfx/vulkan_framegen.cpp */
 
 namespace
 {
@@ -1097,8 +1098,10 @@ void run_script_actions() noexcept
                 char why[320];
                 char path[512] = "";
                 runloop_get_current_savestate_path(path, sizeof(path));
-                std::snprintf(why, sizeof(why), "input: state check: core supports savestate=%d serialize_size=%zu path=%s",
-                              core_info_current_supports_savestate() ? 1 : 0, core_serialize_size(), path);
+                std::snprintf(
+                    why, sizeof(why),
+                    "input: state check: core supports savestate=%d serialize_size=%zu path=%s",
+                    core_info_current_supports_savestate() ? 1 : 0, core_serialize_size(), path);
                 ps5_input_trace(why);
             }
             const bool ok =
@@ -1138,12 +1141,13 @@ void run_script_actions() noexcept
         }
         if (action.kind == ScriptActionKind::record)
         {
-            // The present-stream recorder (PS5_FrameGen, gfx/vulkan_framegen.cpp): the next pictures the display is given,
-            // written to /app0/rec-<n> when the window is full
+            // The present-stream recorder (PS5_FrameGen, gfx/vulkan_framegen.cpp): the next
+            // pictures the display is given, written to /app0/rec-<n> when the window is full
             const unsigned pictures = action.slot > 0 ? static_cast<unsigned>(action.slot) : 240u;
             ps5_fg_record_request(pictures);
             char note[96];
-            std::snprintf(note, sizeof(note), "input: pad script RECORD %u pictures at %.2f s", pictures, seconds);
+            std::snprintf(note, sizeof(note), "input: pad script RECORD %u pictures at %.2f s",
+                          pictures, seconds);
             ps5_input_trace(note);
             continue;
         }

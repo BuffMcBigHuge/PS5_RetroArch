@@ -295,7 +295,8 @@ done
 # The generator's units: C++20 with exceptions (as the frontend's C++), through RetroArch's Vulkan
 # symbol wrapper, so every vk call goes through the pointers RetroArch loads.
 fg_sources=("$fg/framegen/src/fg_common.cpp" "$fg/framegen/src/fg_vulkan.cpp"
-            "$fg/framegen/src/fg_neural.cpp" "$fg/integrations/retroarch/gfx/vulkan_framegen.cpp")
+            "$fg/framegen/src/fg_neural.cpp" "$fg/framegen/src/fg_splat.cpp"
+            "$fg/integrations/retroarch/gfx/vulkan_framegen.cpp")
 for src in "${fg_sources[@]}"; do
     [[ -f $src ]] || { failed+=("$src: absent (PS5_FRAMEGEN=$fg)"); continue; }
     target="$obj/framegen_$(basename "${src%.cpp}").o"

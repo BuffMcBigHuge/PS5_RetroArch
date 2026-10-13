@@ -4652,6 +4652,239 @@ EDITS += [('gfx/drivers/vulkan.c',
   'patches/series, 0121: the present-stream recorder */')]
 
 
+# Frame generation, a core that blocks for its frame (patches/series, 0122): a game slower than the core's declared rate (a
+# 30 fps game from a core declaring 60) reaches the driver as one call for each new frame, 2 core frames apart by the clock.
+# The group's pictures are those of the whole gap, and they belong to the one call there is: the calls the group takes are what
+# the group before it took, its gap is what the clock says.
+EDITS += [('gfx/drivers/vulkan.c',
+  '                     if (vk->framegen_group_open)\n'
+  '                     {\n'
+  '                        if (fg_gap >= 1 && fg_gap <= 8) /* patches/series, 0121: the last gap predicts the next */\n',
+  '                     /* patches/series, 0122: the calls the group that ends here took (1 for a core that blocks for its frame) */\n'
+  '                     const unsigned fg_calls_seen = vk->framegen_call + 1;\n'
+  '                     const bool     fg_was_open   = vk->framegen_group_open;\n'
+  '                     if (vk->framegen_group_open)\n'
+  '                     {\n'
+  '                        if (fg_gap >= 1 && fg_gap <= 8) /* patches/series, 0121: the last gap predicts the next */\n',
+  'patches/series, 0122: the calls the group that ends here took'),
+ ('gfx/drivers/vulkan.c',
+  '                        vk_framegen_begin_group(vk->framegen, vk->framegen_period ? vk->framegen_period : 1,\n'
+  '                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup);\n',
+  '                        unsigned fg_group_gap   = vk->framegen_period ? vk->framegen_period : 1;\n'
+  '                        unsigned fg_group_calls = fg_group_gap;\n'
+  '                        if (fg_was_open && !fg_settings->uints.video_framegen_cadence && fg_calls_seen < fg_group_calls)\n'
+  '                           fg_group_calls = fg_calls_seen; /* patches/series, 0122: fewer calls than frames of gap */\n'
+  '                        vk_framegen_begin_group(vk->framegen, fg_group_calls, fg_group_gap,\n'
+  '                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup);\n',
+  'patches/series, 0122: fewer calls than frames of gap')]
+
+
+# Frame generation, the status and the floor run whenever frames are generated (patches/series, 0122): they were inside the
+# on-screen status's switch, so a title with the status off (the tester's default) had no floor and no base rate.
+EDITS += [('gfx/drivers/vulkan.c',
+  '      /* patches/series, 0120: status on screen */\n'
+  '      if (config_get_ptr()->bools.video_framegen_osd)\n',
+  '      /* patches/series, 0120: status on screen */\n'
+  '      if (vk->framegen || config_get_ptr()->bools.video_framegen_osd) /* patches/series, 0122: the floor and the base rate need it too */\n',
+  'patches/series, 0122: the floor and the base rate need it too')]
+
+
+# Frame generation, how long each call of the core takes (patches/series, 0122): in the status log, to tell a core that is
+# slow from a loop that is.
+EDITS += [('runloop.c',
+  '         core_run();\n'
+  '   }\n'
+  '\n'
+  '   /* Increment runtime tick counter after each call to\n',
+  '      {\n'
+  '         /* patches/series, 0122: the time the core takes for one call, for the frame generation status */\n'
+  '         extern void ps5_fg_note_core_run(double ms);\n'
+  '         struct timespec fg_run_a, fg_run_b;\n'
+  '         clock_gettime(CLOCK_MONOTONIC, &fg_run_a);\n'
+  '         core_run();\n'
+  '         clock_gettime(CLOCK_MONOTONIC, &fg_run_b);\n'
+  '         ps5_fg_note_core_run((double)(fg_run_b.tv_sec - fg_run_a.tv_sec) * 1e3 + (double)(fg_run_b.tv_nsec - fg_run_a.tv_nsec) / 1e6);\n'
+  '      }\n'
+  '   }\n'
+  '\n'
+  '   /* Increment runtime tick counter after each call to\n',
+  'patches/series, 0122: the time the core takes for one call')]
+
+
+# Frame generation, a core that blocks for its frame declares it (patches/series, 0123). The group's pictures then cover the
+# interval the clock measured between its frames, and the group is no longer sized by itself: a core that publishes its next
+# frame only once the last was taken (PS5SX2's hand-over) is held to the rate of the loop that takes it, and a loop whose
+# group length is the gap it measured holds the core at whatever gap it began with. When a call returns with its frame at
+# once (nothing was waited for), the next group is made a little shorter than the gap, until a call has to wait: the gap is
+# then the core's own.
+EDITS += [('runloop.c',
+  '      case RETRO_ENVIRONMENT_GET_OVERSCAN:\n',
+  '      case 0x25001: /* patches/series, 0123: private to this port: the core blocks until its next frame is made */\n'
+  '         {\n'
+  '            extern int ps5_fg_core_blocks;\n'
+  '            ps5_fg_core_blocks = 1;\n'
+  '            RARCH_LOG("[FrameGen] the core blocks for its frames\\n");\n'
+  '         }\n'
+  '         break;\n'
+  '\n'
+  '      case RETRO_ENVIRONMENT_GET_OVERSCAN:\n',
+  'patches/series, 0123: private to this port: the core blocks'),
+ ('runloop.c',
+  '         clock_gettime(CLOCK_MONOTONIC, &fg_run_a);\n'
+  '         core_run();\n',
+  '         clock_gettime(CLOCK_MONOTONIC, &fg_run_a);\n'
+  '         { extern uint64_t ps5_fg_core_run_begin_ns; ps5_fg_core_run_begin_ns = (uint64_t)fg_run_a.tv_sec * 1000000000ull + (uint64_t)fg_run_a.tv_nsec; } /* patches/series, 0123 */\n'
+  '         core_run();\n',
+  'ps5_fg_core_run_begin_ns = (uint64_t)fg_run_a.tv_sec'),
+ ('gfx/drivers/vulkan.c',
+  '                        unsigned fg_group_gap   = vk->framegen_period ? vk->framegen_period : 1;\n'
+  '                        unsigned fg_group_calls = fg_group_gap;\n'
+  '                        if (fg_was_open && !fg_settings->uints.video_framegen_cadence && fg_calls_seen < fg_group_calls)\n'
+  '                           fg_group_calls = fg_calls_seen; /* patches/series, 0122: fewer calls than frames of gap */\n'
+  '                        vk_framegen_begin_group(vk->framegen, fg_group_calls, fg_group_gap,\n'
+  '                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup);\n',
+  '                        unsigned fg_group_gap   = vk->framegen_period ? vk->framegen_period : 1;\n'
+  '                        unsigned fg_group_calls = fg_group_gap;\n'
+  '                        double   fg_gap_s       = (double)fg_group_gap / (double)(ps5_fg_core_fps > 1.0f ? ps5_fg_core_fps : 60.0f);\n'
+  '                        if (fg_was_open && !fg_settings->uints.video_framegen_cadence && fg_calls_seen < fg_group_calls)\n'
+  '                           fg_group_calls = fg_calls_seen; /* patches/series, 0122: fewer calls than frames of gap */\n'
+  '                        {\n'
+  '                           /* patches/series, 0123: a core that blocks for its frames: the clock\'s interval, shortened\n'
+  '                            * while the frame was there before it was asked for */\n'
+  '                           extern int ps5_fg_core_blocks;\n'
+  '                           extern uint64_t ps5_fg_core_run_begin_ns;\n'
+  '                           static uint64_t fg_blk_last_ns;\n'
+  '                           struct timespec fg_blk_ts;\n'
+  '                           uint64_t fg_blk_now;\n'
+  '                           clock_gettime(CLOCK_MONOTONIC, &fg_blk_ts);\n'
+  '                           fg_blk_now = (uint64_t)fg_blk_ts.tv_sec * 1000000000ull + (uint64_t)fg_blk_ts.tv_nsec;\n'
+  '                           if (ps5_fg_core_blocks && fg_was_open && fg_blk_last_ns && ps5_fg_core_fps > 1.0f\n'
+  '                                 && !fg_settings->uints.video_framegen_cadence && fg_gap <= 8)\n'
+  '                           {\n'
+  '                              double measured = (double)(fg_blk_now - fg_blk_last_ns) / 1e9;\n'
+  '                              const double wait_ms = ps5_fg_core_run_begin_ns && fg_blk_now > ps5_fg_core_run_begin_ns\n'
+  '                                 ? (double)(fg_blk_now - ps5_fg_core_run_begin_ns) / 1e6 : 0.0;\n'
+  '                              if (fg_calls_seen == 1 && measured * ps5_fg_core_fps > 1.15 && wait_ms < 0.75)\n'
+  '                                 measured *= 0.97;\n'
+  '                              if (measured * ps5_fg_core_fps >= 0.9 && measured * ps5_fg_core_fps <= 8.5)\n'
+  '                                 fg_gap_s = measured;\n'
+  '                           }\n'
+  '                           fg_blk_last_ns = fg_blk_now;\n'
+  '                        }\n'
+  '                        vk_framegen_begin_group(vk->framegen, fg_group_calls, fg_gap_s,\n'
+  '                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup); /* patches/series, 0123 */\n',
+  'patches/series, 0123 */\n')]
+
+
+# Frame generation, the clock's interval of a core that blocks is averaged (patches/series, 0124): each interval it measures is
+# a whole number of the loop's own presents (16.7 or 25 ms around a true 20), so the length of a group is the average of
+# the last, and the pictures then fall at the instants of the target rate with the remainder carried from group to group.
+EDITS += [('gfx/drivers/vulkan.c',
+  '                              if (fg_calls_seen == 1 && measured * ps5_fg_core_fps > 1.15 && wait_ms < 0.75)\n'
+  '                                 measured *= 0.97;\n'
+  '                              if (measured * ps5_fg_core_fps >= 0.9 && measured * ps5_fg_core_fps <= 8.5)\n'
+  '                                 fg_gap_s = measured;\n',
+  '                              static double fg_blk_avg;\n'
+  '                              if (fg_blk_avg <= 0.0 || fabs(measured - fg_blk_avg) > 0.25 * fg_blk_avg)\n'
+  '                                 fg_blk_avg = measured; /* a new rate: begin again */\n'
+  '                              else\n'
+  '                                 fg_blk_avg = 0.9 * fg_blk_avg + 0.1 * measured; /* patches/series, 0124 */\n'
+  '                              measured = fg_blk_avg;\n'
+  '                              if (fg_calls_seen == 1 && measured * ps5_fg_core_fps > 1.15 && wait_ms < 0.75)\n'
+  '                                 measured *= 0.97;\n'
+  '                              if (measured * ps5_fg_core_fps >= 0.9 && measured * ps5_fg_core_fps <= 8.5)\n'
+  '                                 fg_gap_s = measured;\n',
+  'fg_blk_avg = 0.9 * fg_blk_avg + 0.1 * measured; /* patches/series, 0124 */')]
+
+
+# Frame generation, a core that blocks for its frames says how many of its own frames each one covers (patches/series, 0125):
+# the length of a group is the core's, not a clock's (see 0123, whose clock-based sizing this replaces).
+EDITS += [('gfx/drivers/vulkan.c',
+  "                        unsigned fg_group_gap   = vk->framegen_period ? vk->framegen_period : 1;\n                        unsigned fg_group_calls = fg_group_gap;\n                        double   fg_gap_s       = (double)fg_group_gap / (double)(ps5_fg_core_fps > 1.0f ? ps5_fg_core_fps : 60.0f);\n                        if (fg_was_open && !fg_settings->uints.video_framegen_cadence && fg_calls_seen < fg_group_calls)\n                           fg_group_calls = fg_calls_seen; /* patches/series, 0122: fewer calls than frames of gap */\n                        {\n                           /* patches/series, 0123: a core that blocks for its frames: the clock's interval, shortened\n                            * while the frame was there before it was asked for */\n                           extern int ps5_fg_core_blocks;\n                           extern uint64_t ps5_fg_core_run_begin_ns;\n                           static uint64_t fg_blk_last_ns;\n                           struct timespec fg_blk_ts;\n                           uint64_t fg_blk_now;\n                           clock_gettime(CLOCK_MONOTONIC, &fg_blk_ts);\n                           fg_blk_now = (uint64_t)fg_blk_ts.tv_sec * 1000000000ull + (uint64_t)fg_blk_ts.tv_nsec;\n                           if (ps5_fg_core_blocks && fg_was_open && fg_blk_last_ns && ps5_fg_core_fps > 1.0f\n                                 && !fg_settings->uints.video_framegen_cadence && fg_gap <= 8)\n                           {\n                              double measured = (double)(fg_blk_now - fg_blk_last_ns) / 1e9;\n                              const double wait_ms = ps5_fg_core_run_begin_ns && fg_blk_now > ps5_fg_core_run_begin_ns\n                                 ? (double)(fg_blk_now - ps5_fg_core_run_begin_ns) / 1e6 : 0.0;\n                              static double fg_blk_avg;\n                              if (fg_blk_avg <= 0.0 || fabs(measured - fg_blk_avg) > 0.25 * fg_blk_avg)\n                                 fg_blk_avg = measured; /* a new rate: begin again */\n                              else\n                                 fg_blk_avg = 0.9 * fg_blk_avg + 0.1 * measured; /* patches/series, 0124 */\n                              measured = fg_blk_avg;\n                              if (fg_calls_seen == 1 && measured * ps5_fg_core_fps > 1.15 && wait_ms < 0.75)\n                                 measured *= 0.97;\n                              if (measured * ps5_fg_core_fps >= 0.9 && measured * ps5_fg_core_fps <= 8.5)\n                                 fg_gap_s = measured;\n                           }\n                           fg_blk_last_ns = fg_blk_now;\n                        }\n                        vk_framegen_begin_group(vk->framegen, fg_group_calls, fg_gap_s,\n                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup); /* patches/series, 0123 */\n",
+  "                        unsigned fg_group_gap   = vk->framegen_period ? vk->framegen_period : 1;\n                        unsigned fg_group_calls = fg_group_gap;\n                        double   fg_gap_s       = (double)fg_group_gap / (double)(ps5_fg_core_fps > 1.0f ? ps5_fg_core_fps : 60.0f);\n                        {\n                           /* patches/series, 0125: a core that blocks for its frames says how many of its own frames (the PS2's\n                            * vsyncs) each frame it hands over covers. The group is that long, whatever the clock says or the\n                            * loop that takes the frames makes of it (a group sized by the gap it measured holds the core to\n                            * the rate of that loop), and it takes the calls the last group took: one for such a core. */\n                           extern int ps5_fg_core_blocks;\n                           extern unsigned ps5_fg_core_gap_frames;\n                           if (ps5_fg_core_blocks && ps5_fg_core_gap_frames >= 1 && ps5_fg_core_fps > 1.0f\n                                 && !fg_settings->uints.video_framegen_cadence)\n                           {\n                              fg_group_gap        = ps5_fg_core_gap_frames > 8 ? 8 : ps5_fg_core_gap_frames;\n                              fg_gap_s            = (double)fg_group_gap / (double)ps5_fg_core_fps;\n                              fg_group_calls      = fg_was_open && fg_calls_seen < fg_group_gap ? fg_calls_seen : (fg_was_open ? fg_group_gap : 1);\n                              vk->framegen_period = fg_group_gap;\n                           }\n                           ps5_fg_core_gap_frames = 0;\n                        }\n                        vk_framegen_begin_group(vk->framegen, fg_group_calls, fg_gap_s,\n                              ps5_fg_core_fps, ps5_fg_target_fps, fg_dup); /* patches/series, 0125 */\n                        /* patches/series, 0122: fewer calls than frames of gap (the group takes the calls the last one took) */\n                        /* patches/series, 0123 */\n                        /* fg_blk_avg = 0.9 * fg_blk_avg + 0.1 * measured; /* patches/series, 0124 */\n",
+  'patches/series, 0125: a core that blocks for its frames says'),
+ ('runloop.c',
+  '      case 0x25001: /* patches/series, 0123: private to this port: the core blocks until its next frame is made */\n',
+  '      case 0x25002: /* patches/series, 0125: private to this port: the core frames the next frame handed over covers */\n'
+  '         {\n'
+  '            extern unsigned ps5_fg_core_gap_frames;\n'
+  '            ps5_fg_core_gap_frames = data ? *(const unsigned*)data : 0;\n'
+  '         }\n'
+  '         break;\n'
+  '\n'
+  '      case 0x25001: /* patches/series, 0123: private to this port: the core blocks until its next frame is made */\n',
+  'patches/series, 0125: private to this port: the core frames')]
+
+
+# Frame generation, the producer's own period (patches/series, 0126): a core that is slower than real time (PS2 games at a high
+# internal resolution) makes its frames further apart than the frames they cover; the pictures are then spread over the time the
+# core took, not the time the frames cover, and the time is the core's own (what it took to make the frame, less what it waited
+# for the loop to take the one before) so that the loop cannot hold the core to its own rate.
+EDITS += [('runloop.c',
+  '            ps5_fg_core_gap_frames = data ? *(const unsigned*)data : 0;\n',
+  '            extern unsigned ps5_fg_core_period_us;\n'
+  '            ps5_fg_core_gap_frames = data ? ((const unsigned*)data)[0] : 0;\n'
+  '            ps5_fg_core_period_us  = data ? ((const unsigned*)data)[1] : 0; /* patches/series, 0126 */\n',
+  'patches/series, 0126 */\n'),
+ ('gfx/drivers/vulkan.c',
+  '                              fg_group_gap        = ps5_fg_core_gap_frames > 8 ? 8 : ps5_fg_core_gap_frames;\n'
+  '                              fg_gap_s            = (double)fg_group_gap / (double)ps5_fg_core_fps;\n',
+  '                              extern unsigned ps5_fg_core_period_us;\n'
+  '                              static double fg_period_avg;\n'
+  '                              const double fg_emulated_s = (double)(ps5_fg_core_gap_frames > 8 ? 8 : ps5_fg_core_gap_frames) / (double)ps5_fg_core_fps;\n'
+  '                              const double fg_made_s     = (double)ps5_fg_core_period_us / 1e6;\n'
+  '                              fg_gap_s            = fg_emulated_s;\n'
+  '                              /* patches/series, 0126: slower than real time: the pictures cover the time the core took */\n'
+  '                              if (fg_made_s > 1.1 * fg_emulated_s && fg_made_s < 8.0 / (double)ps5_fg_core_fps)\n'
+  '                              {\n'
+  '                                 if (fg_period_avg <= 0.0 || fabs(fg_made_s - fg_period_avg) > 0.25 * fg_period_avg)\n'
+  '                                    fg_period_avg = fg_made_s;\n'
+  '                                 else\n'
+  '                                    fg_period_avg = 0.9 * fg_period_avg + 0.1 * fg_made_s;\n'
+  '                                 fg_gap_s = fg_period_avg;\n'
+  '                              }\n'
+  '                              else\n'
+  '                                 fg_period_avg = 0.0;\n'
+  '                              fg_group_gap        = (unsigned)(fg_gap_s * (double)ps5_fg_core_fps + 0.5);\n'
+  '                              if (fg_group_gap < 1)\n'
+  '                                 fg_group_gap = 1;\n'
+  '                              if (fg_group_gap > 8)\n'
+  '                                 fg_group_gap = 8;\n',
+  'patches/series, 0126: slower than real time: the pictures cover the time the core took')]
+
+
+# Frame generation, what a core that blocks reports, once a second in the log (patches/series, 0127)
+EDITS += [('gfx/drivers/vulkan.c',
+  '                              fg_group_calls      = fg_was_open && fg_calls_seen < fg_group_gap ? fg_calls_seen : (fg_was_open ? fg_group_gap : 1);\n',
+  '                              fg_group_calls      = fg_was_open && fg_calls_seen < fg_group_gap ? fg_calls_seen : (fg_was_open ? fg_group_gap : 1);\n'
+  '                              {\n'
+  '                                 static unsigned fg_diag_n;\n'
+  '                                 static double fg_diag_emu, fg_diag_made, fg_diag_group;\n'
+  '                                 fg_diag_emu += fg_emulated_s * 1e3;\n'
+  '                                 fg_diag_made += fg_made_s * 1e3;\n'
+  '                                 fg_diag_group += fg_gap_s * 1e3;\n'
+  '                                 if (++fg_diag_n >= 30) /* patches/series, 0127 */\n'
+  '                                 {\n'
+  '                                    RARCH_LOG("[FrameGen] core frames (mean of %u): cover %.1f ms, made in %.1f ms, group %.1f ms, calls %u\\n", fg_diag_n,\n'
+  '                                          fg_diag_emu / fg_diag_n, fg_diag_made / fg_diag_n, fg_diag_group / fg_diag_n, fg_group_calls);\n'
+  '                                    fg_diag_n = 0;\n'
+  '                                    fg_diag_emu = fg_diag_made = fg_diag_group = 0.0;\n'
+  '                                 }\n'
+  '                              }\n',
+  'patches/series, 0127')]
+
+
+# Frame generation, the producer's own period is not used (patches/series, 0128): measured on the console, what the core took
+# to make a frame (less what it waited for a slot) was a whole number of the loop's own vsyncs (66.7, 25.0, 33.4 ms), so the
+# core is paced by the loop that takes its frames by some path other than the slot, and a group sized by it is held at the
+# rate it began with (0126, withdrawn here; the numbers are in the status log still). The frames a frame covers are exact.
+EDITS += [('gfx/drivers/vulkan.c',
+  '                              if (fg_made_s > 1.1 * fg_emulated_s && fg_made_s < 8.0 / (double)ps5_fg_core_fps)\n',
+  '                              /* patches/series, 0128: the producer\'s own period is reported (0127) and not used for the group */\n'
+  '                              if (0 && fg_made_s > 1.1 * fg_emulated_s && fg_made_s < 8.0 / (double)ps5_fg_core_fps)\n',
+  'patches/series, 0128: the producer')]
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print(__doc__.splitlines()[2].strip(), file=sys.stderr)

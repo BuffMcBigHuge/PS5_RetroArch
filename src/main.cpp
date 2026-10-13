@@ -486,9 +486,20 @@ int main(int process_argc, char **process_argv)
         setenv("RADV_THREADED_RECORDING", "1", 1);
         ps5::debug::mark("radv: threaded recording on");
     }
+    /* Testing: /app0/framegen-record-width.txt holds the width the present-stream recorder (pad script RECORD) writes its
+     * pictures at, 640 when absent; a wider one shows what the small pictures hide (a recording is width x height x 4 bytes a
+     * picture, and the pad script's count of them, in memory). */
+    if (std::FILE *width = std::fopen("/app0/framegen-record-width.txt", "r"))
+    {
+        char value[16] = "";
+        if (std::fgets(value, sizeof(value), width) && value[0] >= '0' && value[0] <= '9')
+            setenv("PS5_FRAMEGEN_RECORD_WIDTH", value, 1);
+        std::fclose(width);
+    }
     /* Testing: /app0/framegen-dump.txt (patch 0119) names a folder, and a second line
-     * the number of content frames to let pass first, a third how many to write: the frame generator then writes
-     * its first 60 content frames and the frames it made there, raw RGBA8, for scoring. */
+     * the number of content frames to let pass first, a third how many to write: the frame
+     * generator then writes its first 60 content frames and the frames it made there, raw RGBA8,
+     * for scoring. */
     if (std::FILE *dump = std::fopen("/app0/framegen-dump.txt", "r"))
     {
         char folder[200] = "", skip[16] = "0", count[16] = "60";
