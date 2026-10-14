@@ -19,6 +19,18 @@ function element(tag, text, className) {
   if (className) node.className = className;
   return node;
 }
+// A game, file, system or source name: shown as it is, never matched against the catalogs
+// (a title with "of" in it is not the pattern {0} of {1}).
+function named(tag, text, className) {
+  const node = element(tag, text, className);
+  node.setAttribute('data-no-translate', '');
+  return node;
+}
+function namedOption(text, value) {
+  const option = new Option(text, value);
+  option.setAttribute('data-no-translate', '');
+  return option;
+}
 function icon(kind) { return uiIcon({folder:'folder', file:'file-text', check:'check'}[kind] || kind); }
 function bytes(n) {
   if (n === null || !Number.isFinite(n)) return 'Unknown';
@@ -109,10 +121,10 @@ async function loadLibrary() {
     const select = $('#destination'), selected = select.value;
     select.replaceChildren(new Option('Content folder', ''));
     for (const entry of folders) {
-      select.add(new Option(entry.name, entry.name));
+      select.add(namedOption(entry.name, entry.name));
       if (target.childElementCount < 3) {
         const row = element('a', undefined, 'folder-row'); row.href = '#content';
-        row.append(icon('folder'), element('strong', entry.name), element('span', 'Open content'));
+        row.append(icon('folder'), named('strong', entry.name), element('span', 'Open content'));
         row.addEventListener('click', event => { event.preventDefault(); openFolder(entry.name); });
         target.append(row);
       }
@@ -161,7 +173,7 @@ function renderContent() {
   for (const entry of entries.filter(e => e.name.toLocaleLowerCase().includes(search))) {
     const row = element('div', undefined, 'content-row');
     const path = [currentPath, entry.name].filter(Boolean).join('/');
-    const name = element(entry.directory ? 'button' : 'a', entry.name, 'file-name');
+    const name = named(entry.directory ? 'button' : 'a', entry.name, 'file-name');
     if (entry.directory) { name.type = 'button'; name.addEventListener('click', () => openFolder(path)); }
     else {
       name.href = '/api/download?path=' + encodeURIComponent(path); name.download = entry.name;
@@ -199,7 +211,7 @@ function drawTransfers() {
       if (!row) {
         row = element('div', undefined, 'transfer-row'); row.dataset.transfer = transfer.id;
         const details = element('div', undefined, 'transfer-details');
-        details.append(element('strong', transfer.name), element('span', '', 'muted')); row.append(details);
+        details.append(named('strong', transfer.name), element('span', '', 'muted')); row.append(details);
         target.insertBefore(row, target.children[index] || null);
       }
       const details = row.firstElementChild, message = details.children[1];
@@ -862,8 +874,8 @@ function drawGames() {
     const tags = element('div', undefined, 'version-tags');
     for (const tag of gameTags(game)) tags.append(tagNode(tag));
     card.title = `${game.path.split('/').pop()} · open to see and change its media`;
-    const platform = element('small', undefined, 'game-platform'); platform.append(systemIcon(system.id),document.createTextNode(system.name));
-    info.append(element('strong', gameName(game)), tags, platform, badges);
+    const platform = named('small', undefined, 'game-platform'); platform.append(systemIcon(system.id),document.createTextNode(system.name));
+    info.append(named('strong', gameName(game)), tags, platform, badges);
     // The card opens the game's media; its checkbox still selects it for a download.
     card.tabIndex = 0; card.setAttribute('aria-haspopup', 'dialog');
     card.addEventListener('click', event => { if (event.target !== pick) openGame(system, game); });
@@ -1574,7 +1586,7 @@ function drawRecap() {
     const details = element('details', undefined, 'recap-system'); details.dataset.system = system.id;
     if (open.has(system.id) || recap.systems.length === 1) details.open = true;
     const got = games.filter(g => g.got.length).length, missing = games.filter(g => g.missed.length).length;
-    const summary = element('summary'); summary.append(systemIcon(system.id), element('strong', system.name), element('span', `${games.length.toLocaleString()} game${games.length === 1 ? '' : 's'} · ${got.toLocaleString()} with new media · ${missing.toLocaleString()} missing some`));
+    const summary = element('summary'); summary.append(systemIcon(system.id), named('strong', system.name), element('span', `${games.length.toLocaleString()} game${games.length === 1 ? '' : 's'} · ${got.toLocaleString()} with new media · ${missing.toLocaleString()} missing some`));
     const list = element('div', undefined, 'recap-games'), limit = recapLimit[system.id] || 100;
     const draw = () => {
       list.replaceChildren(...games.slice(0, limit).map(recapRow));
@@ -1592,7 +1604,7 @@ function drawRecap() {
 }
 function recapRow(game) {
   const row = element('div', undefined, 'recap-game'), name = element('div', undefined, 'game-name');
-  name.append(element('span', game.label));
+  name.append(named('span', game.label));
   // The name it was matched as, when it says more than the file's name without its tags.
   const bare = game.label.replace(/\s*[([][^)\]]*[)\]]/g, '').trim();
   if (game.matched && game.matched !== game.label && game.matched !== bare) name.append(element('small', `Matched as ${game.matched}`));
@@ -1634,7 +1646,7 @@ function drawProblems(job) {
   const problems = $('#job-problems'); problems.replaceChildren();
   for (const p of job.problems) {
     const row = element('div', undefined, 'problem-row'), text = element('div');
-    text.append(element('strong', p.label), element('p', p.message, p.state === 'failed' ? 'inline-error' : 'muted'));
+    text.append(named('strong', p.label), element('p', p.message, p.state === 'failed' ? 'inline-error' : 'muted'));
     const actions = element('div', undefined, 'problem-actions');
     const resolve = async (action, value) => {
       row.classList.add('resolving');

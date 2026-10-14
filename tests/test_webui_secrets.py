@@ -4,10 +4,12 @@ password can be set, not read, and a token cannot be written at all."""
 from pathlib import Path
 import http.client
 import json
+import subprocess
 import tempfile
 import unittest
 
 import sys
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_webui_language import Server  # noqa: E402
 
@@ -58,6 +60,28 @@ class Secrets(unittest.TestCase):
                 self.assertEqual(call('POST', b'cheevos_password=correct horse', revision)[0], 200)
                 self.assertIn('cheevos_password = "correct horse"', (root / 'config/webui.cfg').read_text())
                 self.assertNotIn(b'correct horse', call('GET')[1])
+                # The new password signs in, not the old account's token...
+                self.assertIn('cheevos_token = ""', (root / 'config/webui.cfg').read_text())
+                # ...and once RetroArch has its own token (patches/series 0123) the password
+                # leaves webui.cfg; the other settings stay.
+                helper = Path(temp) / 'forget'
+                (Path(temp) / 'forget.c').write_text(
+                    'int ps5_cheevos_forget_password(const char *path, int token_too);\n'
+                    'int main(int c, char **v) { return ps5_cheevos_forget_password(v[1], c < 3) == (c < 3 ? 2 : 1) ? 0 : 1; }\n')
+                subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror', str(Path(temp) / 'forget.c'),
+                                str(ROOT / 'src/ps5_cheevos.c'), '-o', str(helper)], check=True)
+                subprocess.run([str(helper), str(root / 'config/webui.cfg')], check=True)
+                left = (root / 'config/webui.cfg').read_text()
+                self.assertNotIn('cheevos_password', left)
+                self.assertNotIn('cheevos_token', left)
+                self.assertIn('cheevos_enable = "true"', left)
+                # Nothing left to remove: the file is not rewritten.
+                self.assertEqual(subprocess.run([str(helper), str(root / 'config/webui.cfg')]).returncode, 1)
+                # retroarch.cfg loses the password and keeps its token.
+                subprocess.run([str(helper), str(root / 'config/retroarch.cfg'), 'keep-token'], check=True)
+                kept = (root / 'config/retroarch.cfg').read_text()
+                self.assertNotIn('hunter2', kept)
+                self.assertIn('cheevos_token = "abcdef123456"', kept)
             finally:
                 server.stop()
 

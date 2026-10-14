@@ -26,9 +26,9 @@ memory_descriptors = "true"
 
 # Firmware / BIOS
 firmware_count = 1
-firmware0_desc = "'pcsx2/bios' folder (shared with LRPS2)"
+firmware0_desc = "'pcsx2/bios' folder"
 firmware0_path = "pcsx2/bios"
 firmware0_opt = "false"
-notes = "[1] The BIOS folder is LRPS2's: system/pcsx2/bios. Use only a BIOS dumped from a PlayStation 2 you own.|[2] The memory cards are LRPS2's too: system/pcsx2/memcards."
+notes = "[1] The BIOS goes in system/pcsx2/bios. Use only a BIOS dumped from a PlayStation 2 you own.|[2] The memory cards are in system/pcsx2/memcards."
 
 description = "PS5SX2, Swordpdf's PlayStation 5 edition of PCSX2, as a libretro core: PCSX2's recompilers and Vulkan renderer tuned for the PS5's hardware."

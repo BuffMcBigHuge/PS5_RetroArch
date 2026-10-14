@@ -56,7 +56,9 @@ const i18n = (() => {
       if (!match) continue;
       return pattern.value.replace(/\{(\d+)\}/g, (_, n) => {
         const value = match[pattern.order.indexOf(+n) + 1] ?? '';
-        return (depth < 1 && lookup(value, depth + 1)) || value;
+        // Only an exact catalog string inside a sentence: a name put into one keeps its words,
+        // which a pattern such as {0} of {1} would otherwise rewrite.
+        return (depth < 1 && exact.get(normal(value))) || value;
       });
     }
     // Sentences joined by " · " or ". ": each in turn.

@@ -24,7 +24,7 @@ function addFile(file) {
   if (!file || !addGame || addGame.busy || addGame.uploaded) return;
   if (!file.size || file.size > uploadLimit) { addMessage('Choose a non-empty backup of at most ' + bytes(uploadLimit) + '.', true); return; }
   addGame.file = file;
-  $('#add-file-name').textContent = file.name; $('#add-file-hint').textContent = bytes(file.size) + ' · click to choose another file';
+  $('#add-file-name').textContent = file.name; $('#add-file-name').setAttribute('data-no-translate', ''); $('#add-file-hint').textContent = bytes(file.size) + ' · click to choose another file';
   if (!$('#add-name').value || $('#add-name').value === addGame.suggestedName) {
     addGame.suggestedName = file.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' '); $('#add-name').value = addGame.suggestedName;
   }
@@ -41,7 +41,7 @@ async function openAddGame() {
   addGame = {file:null, media:new Map(), selected:'cover', sources:['libretro'], systems:[], settings:null, busy:false, dirty:false, uploaded:null, launchboxId:''};
   const context = addGame;
   $('#add-game').showModal(); addTab('file'); $('#add-results').replaceChildren(); $('#add-match').textContent = ''; $('#add-search-status').textContent = ''; $('#add-search').value = ''; $('#add-search-button').disabled = false;
-  $('#add-file-name').textContent = 'Choose a game backup'; $('#add-file-hint').textContent = 'Drop one file here, or browse your device';
+  $('#add-file-name').textContent = 'Choose a game backup'; $('#add-file-name').removeAttribute('data-no-translate'); $('#add-file-hint').textContent = 'Drop one file here, or browse your device';
   setAddDownloads(true); $('#add-layout').hidden = false; $('#add-activity').hidden = true; $('#add-submit').hidden = false; $('#add-progress').hidden = true; $('#add-submit').disabled = true;
   $('#add-system').disabled = $('#add-drop').disabled = false; $('#add-fetch-details').checked = true;
   // The systems of the last session are not offered while the new list loads: a choice
@@ -60,7 +60,7 @@ async function openAddGame() {
     const [options, settings] = await Promise.all([api('/api/library/add-options'), api('/api/scraper/settings')]);
     if (addGame !== context) return;
     context.systems = options.systems; context.settings = settings;
-    $('#add-system').replaceChildren(new Option('Choose a system', ''), ...options.systems.map(s => new Option(s.name,s.id)));
+    $('#add-system').replaceChildren(new Option('Choose a system', ''), ...options.systems.map(s => namedOption(s.name,s.id)));
     if (options.systems.some(s => s.id === $('#games-system').value)) $('#add-system').value = $('#games-system').value;
     $('#add-region').value = settings.region || 'us'; $('#add-language').value = settings.language || 'en';
     if (!$('#add-language').value) $('#add-language').value = 'en';
@@ -126,7 +126,7 @@ $('#add-search-form').addEventListener('submit', async e => {
     $('#add-search-status').textContent = data.results.length ? 'Choose a match to fill the details below.' : 'No matches. Try another title, or enter your details below.';
     for (const match of data.results) {
       const row = element('div',undefined,'add-result'), text = element('div');
-      text.append(element('strong',match.name),element('small',[match.released,match.developer].filter(Boolean).join(' · ')),element('p',match.description,'add-result-description'));
+      text.append(named('strong',match.name),named('small',[match.released,match.developer].filter(Boolean).join(' · ')),named('p',match.description,'add-result-description'));
       const choose = element('button','Use these details','secondary'); choose.type = 'button';
       choose.addEventListener('click', () => {
         if (context.dirty && !confirm(i18n.t('Replace the current details with this LaunchBox match? You can edit them afterward.'))) return;

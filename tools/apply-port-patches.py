@@ -35,6 +35,29 @@ from pathlib import Path
 # (file, anchor, inserted-before-anchor, already-present-marker)
 EDITS = [
     (
+        "libretro-common/net/net_socket_ssl_mbed.c",
+        "   mbedtls_ssl_conf_authmode(&state->conf, MBEDTLS_SSL_VERIFY_OPTIONAL);\n",
+        "   /* patches/series, 0122: a server whose certificate does not chain to the bundled\n"
+        "    * roots (cacert.h) is refused, so nobody on the network path can stand in for\n"
+        "    * RetroAchievements and read a password or sign-in token. Upstream verifies\n"
+        "    * optionally and ignores the result. */\n"
+        "   mbedtls_ssl_conf_authmode(&state->conf, MBEDTLS_SSL_VERIFY_REQUIRED);\n",
+        "patches/series, 0122: a server whose certificate does not chain",
+    ),
+    (
+        "cheevos/cheevos.c",
+        "         settings->arrays.cheevos_password[0] = '\\0';\n",
+        "         settings->arrays.cheevos_password[0] = '\\0';\n"
+        "         {\n"
+        "            /* patches/series, 0123: the password the WebUI saved is not kept once\n"
+        "             * RetroArch has a token (src/ps5_cheevos.c). */\n"
+        "            extern int ps5_cheevos_forget_password(const char *path, int token_too);\n"
+        "            ps5_cheevos_forget_password(\"/app0/config/webui.cfg\", 1);\n"
+        "            ps5_cheevos_forget_password(\"/app0/config/retroarch.cfg\", 0);\n"
+        "         }\n",
+        "patches/series, 0123: the password the WebUI saved is not kept",
+    ),
+    (
         "menu/drivers/xmb.c",
         "         /* If the playlist icon doesn't exist return default */\n"
         "         if (!path_is_valid(texturepath))\n",

@@ -11,8 +11,7 @@
 # with ps5/libretro/ for the libretro side. An ordinary build clones the pinned
 # revision below and builds it as it is; PS5SX2_DEV=1 builds the fork's working tree
 # as it stands, which is how the port is edited: change ../Libretro_PS5SX2, build
-# with PS5SX2_DEV=1, commit there, then move the pin. LRPS2 stays the PS2 default
-# (docs/PLAN.md): this core is chosen per game until it has proved itself.
+# with PS5SX2_DEV=1, commit there, then move the pin. It is the title's PS2 core.
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"

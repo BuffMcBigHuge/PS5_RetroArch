@@ -103,6 +103,8 @@ class LanguageBrowser(unittest.TestCase):
             for name in ('config', 'content', 'webui'):
                 (root / name).mkdir(parents=True)
             shutil.copytree(ROOT / 'webui', root / 'webui', dirs_exist_ok=True)
+            # A name that reads like a catalog pattern ("{0} of {1}"): shown as it is.
+            (root / 'content/Shadow of the Colossus (USA).iso').write_bytes(b'fixture')
             server = Server(root)
             try:
                 shots = Path(os.environ.get('WEBUI_SCREENSHOTS', ROOT / 'build/tmp/webui-language'))

@@ -77,6 +77,9 @@ function untranslated(page, catalog) {
       await page.waitForFunction(id => !document.getElementById(id).hidden, name);
       await page.waitForTimeout(500);
       assert.deepEqual(await untranslated(page, french), [], `the ${name} page is all French`);
+      if (name === 'content')
+        assert.equal(await page.locator('.file-name').filter({ hasText: 'Colossus' }).innerText(),
+          'Shadow of the Colossus (USA).iso', 'a file name is never translated');
     }
     await page.locator('[data-page=settings]').click();
     // The Settings footer lists every language, the chosen one marked.

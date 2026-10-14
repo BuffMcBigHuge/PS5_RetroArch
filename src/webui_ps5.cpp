@@ -818,6 +818,11 @@ MHD_Result config_editor(MHD_Connection *c, const std::string &method, const std
                          std::strtod(value.c_str(), nullptr) > s.max))
                         return error(c, 400, "A setting is outside its supported range.");
                 }
+        // A new password or account signs in with the password: the old account's token,
+        // which RetroArch would try first, goes (src/ps5_cheevos.c removes both after).
+        if ((key == "cheevos_password" || key == "cheevos_username") &&
+            (original == baseline.end() || original->second != value))
+            saved["cheevos_token"] = "";
         saved[key] = value;
         ++changed;
         if (end == std::string::npos)
