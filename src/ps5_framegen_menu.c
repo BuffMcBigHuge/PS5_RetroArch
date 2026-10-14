@@ -194,9 +194,10 @@ void ps5_fg_menu_help(const char *label, char *s, size_t len)
                 len);
 }
 
-/* The floor is off unless PS5_FRAMEGEN_FLOOR=1 names it (a test): every picture of the output rate is generated, whatever rate
- * the core makes its frames at. The rates a core makes with and without generation were compared in
- * docs/design.md and did not tell a core that generation slows from a game that changed its own rate. */
+/* The floor is off unless PS5_FRAMEGEN_FLOOR=1 names it (a test): every picture of the output rate
+ * is generated, whatever rate the core makes its frames at. The rates a core makes with and without
+ * generation were compared in docs/design.md and did not tell a core that generation slows from a
+ * game that changed its own rate. */
 static bool floor_enabled(void)
 {
     static int enabled = -1;
@@ -208,11 +209,13 @@ static bool floor_enabled(void)
     return enabled == 1;
 }
 
-/* A core that blocks until its next frame is made says so (the private environment command of patches/series, 0123); the
- * runloop notes the instant it calls the core. */
+/* A core that blocks until its next frame is made says so (the private environment command of
+ * patches/series, 0123); the runloop notes the instant it calls the core. */
 int ps5_fg_core_blocks;
-unsigned ps5_fg_core_period_us; /* the microseconds the core took to make the next frame handed over (0x25002) */
-unsigned ps5_fg_core_gap_frames; /* the frames the next frame handed over covers, from the core (0x25002); 0: not said */
+unsigned ps5_fg_core_period_us; /* the microseconds the core took to make the next frame handed over
+                                   (0x25002) */
+unsigned ps5_fg_core_gap_frames; /* the frames the next frame handed over covers, from the core
+                                    (0x25002); 0: not said */
 uint64_t ps5_fg_core_run_begin_ns;
 
 /* The runloop calls this with the time of each call of the core (patches/series, 0122) */
@@ -307,23 +310,27 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
                   "%.1f calls/s, governor level %u (%.2f ms a picture)\n",
                   (double)presents / seconds, (double)(generated - last_generated) / seconds,
                   new_per_s, calls_per_s, level, gen_ms);
-        /* The floor: a core that cannot keep its own rate gains nothing from frames made between its frames if the work
-         * only slows it more. Whether it does is measured, not assumed: a core whose game steps at 30 while it declares 60
-         * (a core that blocks for its next frame) also makes fewer calls a second than the rate it declares, and the
-         * generator costs it nothing. Two slow windows turn generation off for one window; the rate then, and the rate
-         * with generation back, are compared: generation that costs the core under a tenth of its rate stays on, and
-         * stays on while the core holds that rate. Generation that slows the core is off for ten seconds, then tried
-         * again. */
+        /* The floor: a core that cannot keep its own rate gains nothing from frames made between
+         * its frames if the work only slows it more. Whether it does is measured, not assumed: a
+         * core whose game steps at 30 while it declares 60 (a core that blocks for its next frame)
+         * also makes fewer calls a second than the rate it declares, and the generator costs it
+         * nothing. Two slow windows turn generation off for one window; the rate then, and the rate
+         * with generation back, are compared: generation that costs the core under a tenth of its
+         * rate stays on, and stays on while the core holds that rate. Generation that slows the
+         * core is off for ten seconds, then tried again. */
         {
-            static int phase; /* 0 generating, 1 off for the measure, 2 generating again, to be compared */
+            static int
+                phase; /* 0 generating, 1 off for the measure, 2 generating again, to be compared */
             static unsigned verify_windows, off_windows;
             static double last_slow_rate;
-            static double rate_off, rate_kept; /* calls a second: without generation; the rate generation was found harmless at */
+            static double rate_off, rate_kept; /* calls a second: without generation; the rate
+                                                  generation was found harmless at */
             if (ps5_fg_floor)
             {
                 if (phase == 1)
                 {
-                    /* the first window with generation off is a mix of both: the second is the core's rate without it */
+                    /* the first window with generation off is a mix of both: the second is the
+                     * core's rate without it */
                     if (++off_windows >= 2)
                     {
                         rate_off = calls_per_s;
@@ -347,7 +354,8 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
                     if (calls_per_s >= 0.9 * rate_off)
                     {
                         rate_kept = rate_off;
-                        RARCH_LOG("[FrameGen] floor: the core makes %.1f calls/s with generation and %.1f without; generation "
+                        RARCH_LOG("[FrameGen] floor: the core makes %.1f calls/s with generation "
+                                  "and %.1f without; generation "
                                   "costs it nothing and stays on\n",
                                   calls_per_s, rate_off);
                     }
@@ -356,7 +364,8 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
                         rate_kept = 0.0;
                         ps5_fg_floor = 1;
                         floor_until = t.tv_sec + 10;
-                        RARCH_LOG("[FrameGen] floor: the core makes %.1f calls/s with generation and %.1f without; frames are "
+                        RARCH_LOG("[FrameGen] floor: the core makes %.1f calls/s with generation "
+                                  "and %.1f without; frames are "
                                   "shown as it makes them for 10 s\n",
                                   calls_per_s, rate_off);
                     }
@@ -365,8 +374,8 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
             else if (floor_enabled() && plan && ps5_fg_core_fps > 20.0f &&
                      calls_per_s < 0.85 * (rate_kept > 0.0 ? rate_kept : (double)ps5_fg_core_fps))
             {
-                /* the core's rate must have settled: a game that has just changed its rate (a level loaded, a state
-                 * loaded) is not yet a rate to judge */
+                /* the core's rate must have settled: a game that has just changed its rate (a level
+                 * loaded, a state loaded) is not yet a rate to judge */
                 if (slow_windows == 0 || fabs(calls_per_s - last_slow_rate) <= 0.1 * last_slow_rate)
                     slow_windows++;
                 else
@@ -378,10 +387,12 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
                     slow_windows = 0;
                     off_windows = 0;
                     if (rate_kept > 0.0)
-                        rate_kept = 0.0; /* it slowed below the rate generation was found harmless at: measure again */
+                        rate_kept = 0.0; /* it slowed below the rate generation was found harmless
+                                            at: measure again */
                     phase = 1;
                     floor_until = t.tv_sec + 4;
-                    RARCH_LOG("[FrameGen] floor: the core runs at %.1f of %.1f frames/s; generation off for two windows to "
+                    RARCH_LOG("[FrameGen] floor: the core runs at %.1f of %.1f frames/s; "
+                              "generation off for two windows to "
                               "see whether it is the cause\n",
                               calls_per_s, (double)ps5_fg_core_fps);
                 }
@@ -389,11 +400,11 @@ void ps5_fg_osd(bool plan, unsigned subframes, unsigned period, unsigned width, 
             else
                 slow_windows = 0;
         }
-        RARCH_LOG("[FrameGen] core run: %u calls, mean %.2f ms, max %.2f ms, %u over 20 ms\n", run_calls,
-                  run_calls ? run_sum_ms / run_calls : 0.0, run_max_ms, run_long);
+        RARCH_LOG("[FrameGen] core run: %u calls, mean %.2f ms, max %.2f ms, %u over 20 ms\n",
+                  run_calls, run_calls ? run_sum_ms / run_calls : 0.0, run_max_ms, run_long);
         {
-            /* the CPU the title's threads used over the window: this thread (the frontend and the generator's recording)
-             * and every thread (with the core's), in cores */
+            /* the CPU the title's threads used over the window: this thread (the frontend and the
+             * generator's recording) and every thread (with the core's), in cores */
             static double thread_prev, process_prev;
             struct timespec ct, cp;
             double thread_now, process_now;

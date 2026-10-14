@@ -186,6 +186,14 @@ static int menu_cbs_init_bind_ok_compare_label(menu_file_list_cbs_t *c, const ch
 static int menu_cbs_init_bind_ok_compare_type(menu_file_list_cbs_t *c, const char *l,
                                              const char *m, unsigned t)
 { return -1; }
+/* The frame generation entries (patches/series, 0120) bound beside the WebUI's: none here. */
+#include <stdbool.h>
+static bool ps5_fg_menu_is_label(const char *l) { return false; }
+static bool ps5_fg_menu_is_folder(const char *l) { return false; }
+static int action_ok_push_default(const char *p, const char *l, unsigned t, size_t i, size_t e)
+{ return 0; }
+static int action_ok_ps5_fg(const char *p, const char *l, unsigned t, size_t i, size_t e)
+{ return 0; }
 """
         code += function(callbacks, 'static int action_ok_ps5_webui(')
         code += function(callbacks, 'int menu_cbs_init_bind_ok(')

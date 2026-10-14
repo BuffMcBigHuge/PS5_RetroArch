@@ -4,7 +4,7 @@
  * new account signs in with it), and the title appends that file to RetroArch's config at
  * every start. Once RetroArch has signed in it keeps a token and clears its password, but
  * only in its own settings, and retroarch.cfg holds the old password until RetroArch next
- * saves it: patches/series 0123 calls this then, so the password stays in neither file
+ * saves it: patches/series 0130 calls this then, so the password stays in neither file
  * (/app0/config, a folder FTP can read). retroarch.cfg keeps its token.
  * Copyright (C) 2026 Mihawk
  * SPDX-License-Identifier: GPL-3.0-or-later

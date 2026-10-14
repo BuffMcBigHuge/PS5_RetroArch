@@ -62,7 +62,7 @@ class Secrets(unittest.TestCase):
                 self.assertNotIn(b'correct horse', call('GET')[1])
                 # The new password signs in, not the old account's token...
                 self.assertIn('cheevos_token = ""', (root / 'config/webui.cfg').read_text())
-                # ...and once RetroArch has its own token (patches/series 0123) the password
+                # ...and once RetroArch has its own token (patches/series 0130) the password
                 # leaves webui.cfg; the other settings stay.
                 helper = Path(temp) / 'forget'
                 (Path(temp) / 'forget.c').write_text(

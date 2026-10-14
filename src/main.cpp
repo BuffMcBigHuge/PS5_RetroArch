@@ -486,9 +486,10 @@ int main(int process_argc, char **process_argv)
         setenv("RADV_THREADED_RECORDING", "1", 1);
         ps5::debug::mark("radv: threaded recording on");
     }
-    /* Testing: /app0/framegen-record-width.txt holds the width the present-stream recorder (pad script RECORD) writes its
-     * pictures at, 640 when absent; a wider one shows what the small pictures hide (a recording is width x height x 4 bytes a
-     * picture, and the pad script's count of them, in memory). */
+    /* Testing: /app0/framegen-record-width.txt holds the width the present-stream recorder (pad
+     * script RECORD) writes its pictures at, 640 when absent; a wider one shows what the small
+     * pictures hide (a recording is width x height x 4 bytes a picture, and the pad script's count
+     * of them, in memory). */
     if (std::FILE *width = std::fopen("/app0/framegen-record-width.txt", "r"))
     {
         char value[16] = "";

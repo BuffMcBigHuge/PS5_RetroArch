@@ -278,6 +278,6 @@
 
 0121  Frame generation Output Rate Auto: the video output picks the presents per game frame from the display's rate over the game's (video_framegen_auto), and frame generation is on by default.
 
-0122  HTTPS refuses a server whose certificate does not chain to the bundled roots (cacert.h): MBEDTLS_SSL_VERIFY_REQUIRED instead of upstream's optional check whose result was ignored, so nobody on the network path can stand in for RetroAchievements.
+0129  HTTPS refuses a server whose certificate does not chain to the bundled roots (cacert.h): MBEDTLS_SSL_VERIFY_REQUIRED instead of upstream's optional check whose result was ignored, so nobody on the network path can stand in for RetroAchievements.
 
-0123  A RetroAchievements sign-in that returns a token also removes the password from /app0/config/webui.cfg (with the empty token the WebUI put beside it) and from retroarch.cfg, which keeps its token (src/ps5_cheevos.c).
+0130  A RetroAchievements sign-in that returns a token also removes the password from /app0/config/webui.cfg (with the empty token the WebUI put beside it) and from retroarch.cfg, which keeps its token (src/ps5_cheevos.c).

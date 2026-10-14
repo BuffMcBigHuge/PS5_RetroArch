@@ -685,6 +685,11 @@ bool exit_requested()
     return request_update_exit;
 }
 } // namespace ps5_update
+/* PS5_FrameGen's present-stream recorder (the pad script's RECORD): not linked here. */
+extern "C" void ps5_fg_record_request(unsigned pictures)
+{
+    (void)pictures;
+}
 /* src/webui_link.cpp: no daemon here; the in-process request above is the one tested. */
 extern "C" int ps5_webui_link_install_requested(void)
 {
