@@ -403,7 +403,7 @@
                 {"from": ".deps/ps5sx2/glslang/LICENSE.txt", "to": "LICENSE.glslang.txt"},
                 {"from": ".deps/ps5sx2-src/ps5/coreorbis/orbis-shims/framegen/LICENSE.txt", "to": "LICENSE.framegen.txt"}],
       "source": {"kind": "core", "build": "ps5sx2", "tree": ".deps/ps5sx2-src", "remote": "https://github.com/mihawk-99/Libretro_PS5SX2"},
-      "modifications": "The fork's libretro branch over Swordpdf/PS5SX2 (ps5/libretro, the LIBRETRO hooks in GSDeviceVK and VKLoader)."
+      "modifications": "The fork's commits over Swordpdf/PS5SX2 on its main branch (ps5/libretro, the LIBRETRO hooks in GSDeviceVK and VKLoader)."
     },
     {
       "id": "beetle-psx",

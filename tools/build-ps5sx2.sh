@@ -6,7 +6,7 @@
 #
 # PS5SX2 (github.com/Swordpdf/PS5SX2) is PCSX2 made for the PS5: its recompilers,
 # its Vulkan renderer on the console's driver, and its fixes. The source is my fork,
-# ../Libretro_PS5SX2 (github.com/mihawk-99/Libretro_PS5SX2), branch libretro: the
+# ../Libretro_PS5SX2 (github.com/mihawk-99/Libretro_PS5SX2), branch main: the
 # emulator without the app around it (shelf, notifications, disc drive, elevation),
 # with ps5/libretro/ for the libretro side. An ordinary build clones the pinned
 # revision below and builds it as it is; PS5SX2_DEV=1 builds the fork's working tree
@@ -27,7 +27,7 @@ sdk="$root/.deps/native/ps5-payload-sdk"
 [[ -x $sdk/bin/prospero-clang ]] || { echo "error: bootstrap this project's SDK first" >&2; exit 2; }
 export PS5_PAYLOAD_SDK="$sdk"
 
-revision=dba9ef4a9e01f930781cbc5eb177cf325e0af502  # ../Libretro_PS5SX2 libretro
+revision=dba9ef4a9e01f930781cbc5eb177cf325e0af502  # ../Libretro_PS5SX2 main
 # The emulator's own dependencies, at the revisions PS5SX2's app builds with.
 ryml_revision=0cd25a10e0b83e4e1c11ad74048f4817f45b9763      # rapidyaml, c4core in ext/
 glslang_revision=275822a6261ee689aadb1da5f09a0ec2f058685c   # glslang
