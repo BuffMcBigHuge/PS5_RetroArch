@@ -392,6 +392,18 @@
       "modifications": "patches/dolphin/ps5-port.patch (PS5_RetroArch)."
     },
     {
+      "id": "mihawkgen",
+      "name": "PS5_MihawkGen: neural frame generation and its trained network",
+      "kind": "code",
+      "always": true,
+      "artifacts": ["eboot.bin", "assets/framegen/**"],
+      "licence": "GPL-3.0-or-later",
+      "copyright": ["Copyright (C) 2026 Mihawk"],
+      "texts": [{"from": "../PS5_MihawkGen/LICENSE.md", "to": "LICENSE.md"}],
+      "source": {"kind": "git", "path": "../PS5_MihawkGen", "remote": "https://github.com/mihawk-99/PS5_MihawkGen"},
+      "modifications": "The generator (framegen/src, framegen/include) and the network (framegen/models/network.fgw) as published; the RetroArch driver shim is PS5_RetroArch's tooling/framegen."
+    },
+    {
       "id": "ps5sx2",
       "name": "PS5SX2 (PCSX2 for the PS5, PlayStation 2) and its game database",
       "kind": "code",

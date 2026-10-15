@@ -244,15 +244,21 @@ if [[ ! -f $patch_stamp || $(<"$patch_stamp") != "$patch_list" ]]; then
     printf '%s\n' "$patch_list" > "$patch_stamp"
 fi
 
-# Frame generation (patches/series, 0119): the generator and the driver's shim are PS5_FrameGen's,
-# checked out beside this repository. The shim's header goes into the configured tree, where
-# vulkan.c includes it by name. Its objects are built here and join the archive below.
-fg="${PS5_FRAMEGEN:-$root/../PS5_FrameGen}"
+# Frame generation (patches/series, 0119): the generator and its trained network are
+# PS5_MihawkGen's (github.com/mihawk-99/PS5_MihawkGen, public), checked out beside this repository
+# at the revision below; a release build refuses any other. The driver's shim is this repository's
+# (tooling/framegen); its header goes into the configured tree, where vulkan.c includes it by name.
+# The objects are built here and join the archive below.
+fg="${PS5_FRAMEGEN:-$root/../PS5_MihawkGen}"
+fg_revision=c57232a9f16bcb6df5fe07c9bb631518f2b1cc0e
+fg_shim="$root/tooling/framegen"
 fg_objects=()
-if [[ -f $fg/framegen/include/framegen.h ]]; then
-    cmp -s "$fg/integrations/retroarch/gfx/vulkan_framegen.h" "$tree/gfx/drivers/vulkan_framegen.h" ||
-        cp "$fg/integrations/retroarch/gfx/vulkan_framegen.h" "$tree/gfx/drivers/vulkan_framegen.h"
+if [[ -n ${PS5_RELEASE_TAG:-} ]]; then
+    [[ $(git -C "$fg" rev-parse HEAD 2>/dev/null) == "$fg_revision" ]] ||
+        { echo "error: a release builds frame generation from $fg at $fg_revision" >&2; exit 2; }
 fi
+cmp -s "$fg_shim/vulkan_framegen.h" "$tree/gfx/drivers/vulkan_framegen.h" ||
+    cp "$fg_shim/vulkan_framegen.h" "$tree/gfx/drivers/vulkan_framegen.h"
 compiled=0
 skipped=()
 failed=()
@@ -296,17 +302,17 @@ done
 # symbol wrapper, so every vk call goes through the pointers RetroArch loads.
 fg_sources=("$fg/framegen/src/fg_common.cpp" "$fg/framegen/src/fg_vulkan.cpp"
             "$fg/framegen/src/fg_neural.cpp" "$fg/framegen/src/fg_splat.cpp"
-            "$fg/integrations/retroarch/gfx/vulkan_framegen.cpp")
+            "$fg_shim/vulkan_framegen.cpp")
 for src in "${fg_sources[@]}"; do
     [[ -f $src ]] || { failed+=("$src: absent (PS5_FRAMEGEN=$fg)"); continue; }
     target="$obj/framegen_$(basename "${src%.cpp}").o"
     if ! { [[ -f $target && $target -nt $src ]] &&
-           [[ -z $(find "$fg/framegen" -newer "$target" \( -name '*.h' -o -name '*.cpp' \) -print -quit) ]]; }; then
+           [[ -z $(find "$fg/framegen" "$fg_shim" -newer "$target" \( -name '*.h' -o -name '*.cpp' \) -print -quit) ]]; }; then
         PS5_CLANG=/usr/bin/clang PS5_PAYLOAD_SDK="$sdk" \
             sh "$root/tooling/prospero-clang18" -std=c++20 -O2 -w -fexceptions -fno-rtti \
                -ffunction-sections -fdata-sections -include vulkan/vulkan_symbol_wrapper.h \
                "${defines[@]}" "${includes[@]}" -I"$fg/framegen/include" -I"$fg/framegen/src" \
-               -I"$fg/integrations/retroarch/gfx" -c "$src" -o "$target" 2>"$out/last-error.txt" ||
+               -I"$fg_shim" -c "$src" -o "$target" 2>"$out/last-error.txt" ||
             { failed+=("$src: $(grep -m1 'error:' "$out/last-error.txt" | sed 's/^.*error: //')"); continue; }
     fi
     fg_objects+=("$target")

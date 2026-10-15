@@ -506,8 +506,9 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps({"release": sys.argv[2], "build"
     "repository": "mihawk-99/PS5_RetroArch"}) + "\n")
 PY_WEBUI
 
-# The frame generator's trained network (patches/series, 0119), from PS5_FrameGen beside this repository.
-fg_network="${PS5_FRAMEGEN:-$root/../PS5_FrameGen}/framegen/models/network.fgw"
+# The frame generator's trained network (patches/series, 0119), from PS5_MihawkGen beside this
+# repository (tools/build-retroarch.sh pins its revision).
+fg_network="${PS5_FRAMEGEN:-$root/../PS5_MihawkGen}/framegen/models/network.fgw"
 if [[ -f $fg_network ]]; then
     mkdir -p "$dist/assets/framegen"
     cp "$fg_network" "$dist/assets/framegen/network.fgw"
