@@ -46,5 +46,5 @@
     "ppsspp-default-test-20261002__balanced-final.png": "dda357812a9e973b0f46b9fb30d519c0165535c3848017b87ac1e8da7fc57b7f"
   },
   "cleanup": "Console idle; temporary test directory removed and helper stopped; original state and frontend configuration unchanged; requested PPSSPP profile retained.",
-  "limitations": "Short Ghost of Sparta run only. Core starting profiles target 4K presentation, not universal native-4K rendering or per-game performance guarantees."
+  "limitations": "Short PSP Test Game 2 run only. Core starting profiles target 4K presentation, not universal native-4K rendering or per-game performance guarantees."
 }

@@ -1,13 +1,13 @@
 {
-  "step": "webui-release-bust-a-move",
+  "step": "webui-release-game-overlay",
   "revision": "working tree on 0d4c8bf",
-  "command": "Browser screenshots of Bust-A-Move Media, Details, Files and savestate panels; validate catalog SHA-256 and release preview image loading",
+  "command": "Browser screenshots of Puzzle Test Game Media, Details, Files and savestate panels; validate catalog SHA-256 and release preview image loading",
   "lines": [
-    "Four game inspector screenshots recaptured for Bust-A-Move",
+    "Four game inspector screenshots recaptured for Puzzle Test Game",
     "Media shows 10 of 10 available types",
     "Details, Files and savestate controls captured without saving changes",
     "All 15 release preview images load",
-    "Release prose changed only Blazing Star to Bust-A-Move; permanent warning unchanged"
+    "Release prose changed only Shooter Test Game to Puzzle Test Game; permanent warning unchanged"
   ],
   "screenshots": [
     {
@@ -17,7 +17,7 @@
         594
       ],
       "sha256": "f9ecf12ae56c3b9a0496775f42cf5317bd514aac85a873f75731c9b644a0d7a2",
-      "game": "Bust-A-Move"
+      "game": "Puzzle Test Game"
     },
     {
       "file": "webui-game-files.jpg",
@@ -26,7 +26,7 @@
         594
       ],
       "sha256": "78662bfb3473ff1ee2a735f3bfe0a55317816c9f16023d92a95a1d247c008d5b",
-      "game": "Bust-A-Move"
+      "game": "Puzzle Test Game"
     },
     {
       "file": "webui-game-media.jpg",
@@ -35,7 +35,7 @@
         594
       ],
       "sha256": "7b312c4f136167b1ed419cd06f1020da370bdc56335b137c443ea2ef5e1541af",
-      "game": "Bust-A-Move"
+      "game": "Puzzle Test Game"
     },
     {
       "file": "webui-game-savestates.jpg",
@@ -44,7 +44,7 @@
         594
       ],
       "sha256": "307439798aeb8ab8901a9665a5a6eac3c0f40569510601247815b90caf59e2bc",
-      "game": "Bust-A-Move"
+      "game": "Puzzle Test Game"
     }
   ]
 }

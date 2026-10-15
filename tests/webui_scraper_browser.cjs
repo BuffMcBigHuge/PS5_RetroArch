@@ -92,22 +92,22 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     assert.equal(await page.locator('#stat-partial').innerText(), '1');
     // The ambiguous game: its region's candidate offered first, chosen from the tab.
     await page.locator('#job-problems-box summary').click();
-    const row = page.locator('.problem-row', { hasText: 'Chrono Trigger Special Edition' });
-    assert.equal(await row.locator('select').inputValue(), 'Chrono Trigger (USA)');
+    const row = page.locator('.problem-row', { hasText: 'Time Voyager Special Edition' });
+    assert.equal(await row.locator('select').inputValue(), 'Time Voyager (USA)');
     await row.getByRole('button', { name: 'Use this match' }).click();
     await page.waitForFunction(() => document.querySelector('#stat-attention').textContent === '1', null, { timeout: 60000 });
     // The recap: per kind, then each game's media, the missing ones and why.
     await page.waitForFunction(() => !document.querySelector('#job-recap').hidden && /4 new/.test(document.querySelector('.recap-kind')?.textContent || ''), null, { timeout: 30000 });
     assert.match(await page.locator('.recap-kind', { hasText: 'Title screen' }).innerText(), /3 new[\s\S]*0 kept[\s\S]*2 missing/);
-    const metroid = page.locator('.recap-game', { hasText: 'Super Metroid' });
-    assert.equal(await metroid.locator('.kind-pill.got').count(), 2);
-    assert.equal(await metroid.locator('.kind-pill.missed').innerText(), 'Title screen');
+    const hunter = page.locator('.recap-game', { hasText: 'Space Hunter' });
+    assert.equal(await hunter.locator('.kind-pill.got').count(), 2);
+    assert.equal(await hunter.locator('.kind-pill.missed').innerText(), 'Title screen');
     await page.locator('#recap-filter .chip', { hasText: 'Not found' }).click();
     assert.equal(await page.locator('.recap-game').count(), 1);
     assert.match(await page.locator('.recap-game').innerText(), /Totally Unknown Homebrew[\s\S]*No match at libretro/);
     await page.locator('#recap-filter .chip', { hasText: 'All games' }).click();
     await page.locator('.recap-kind', { hasText: 'Title screen' }).click();
-    await page.locator('#recap-search').fill('chrono');
+    await page.locator('#recap-search').fill('voyager');
     assert.equal(await page.locator('.recap-game').count(), 2);
     assert.equal(await page.locator('.recap-game .kind-pill').count(), 2, 'one kind shown when one is picked');
     await page.goto(process.env.WEBUI_TEST_URL + '/#games');
@@ -116,7 +116,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
       return covers.length === 4 && covers.every(img => img.complete && img.naturalWidth > 0);
     });
     // A card opens the game: one row a kind of media, missing ones greyed, each replaceable.
-    await page.locator('.game-card', { hasText: 'Donkey Kong Country 2' }).locator('.game-cover').click();
+    await page.locator('.game-card', { hasText: 'Jungle Run 2' }).locator('.game-cover').click();
     const sheet = page.locator('#game-sheet');
     await sheet.waitFor({ state: 'visible' });
     await page.waitForFunction(() => document.querySelectorAll('#game-sheet .sheet-thumb').length === 10);
@@ -163,7 +163,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     await page.locator('#sheet-nav button[data-tab="media"]').click();
     await page.keyboard.press('Escape');
     await sheet.waitFor({ state: 'hidden' });
-    assert.match(await page.locator('.game-card', { hasText: 'Donkey Kong Country 2' }).locator('.media-badges').innerText(), /Fan art/);
+    assert.match(await page.locator('.game-card', { hasText: 'Jungle Run 2' }).locator('.media-badges').innerText(), /Fan art/);
     // The cards' picture: any of four kinds, remembered; a game without it shows the kind's drawing.
     await page.locator('label:has(input[name="games-view"][value="box3d"])').click();
     await page.waitForFunction(() => document.querySelector('#games-grid').dataset.view === 'box3d');
@@ -177,9 +177,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
       return covers.length === 4 && covers.every(img => img.complete && img.naturalWidth > 0);
     });
     // The checkbox still selects without opening.
-    await page.locator('.game-card', { hasText: 'Donkey Kong Country 2' }).locator('.game-select').click();
+    await page.locator('.game-card', { hasText: 'Jungle Run 2' }).locator('.game-select').click();
     assert.equal(await sheet.isVisible(), false);
-    await page.locator('.game-card', { hasText: 'Donkey Kong Country 2' }).locator('.game-select').click();
+    await page.locator('.game-card', { hasText: 'Jungle Run 2' }).locator('.game-select').click();
     await page.locator('#add-game-open').click();
     await page.locator('#add-system').selectOption('snes');
     await page.locator('#add-file').setInputFiles({name:'Browser Homebrew.sfc', mimeType:'application/octet-stream', buffer:Buffer.from('synthetic game')});
@@ -210,9 +210,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     // Adding with downloads stays in a live progress view and opens fresh artwork.
     await page.locator('#add-game-open').click();
     await page.locator('#add-system').selectOption('snes');
-    await page.locator('#add-file').setInputFiles({name:'Super Metroid Download Check.sfc',mimeType:'application/octet-stream',buffer:Buffer.from('synthetic download-flow backup')});
+    await page.locator('#add-file').setInputFiles({name:'Space Hunter Download Check.sfc',mimeType:'application/octet-stream',buffer:Buffer.from('synthetic download-flow backup')});
     await page.locator('[data-add-tab=details]').click();
-    await page.locator('#add-name').fill('Super Metroid (Japan, USA) (En,Ja)');
+    await page.locator('#add-name').fill('Space Hunter (Japan, USA) (En,Ja)');
     await page.locator('[data-add-tab=media]').click();
     assert.equal(await page.locator('#add-download').getAttribute('aria-pressed'),'true');
     assert.match(await page.locator('#add-submit').innerText(),/Add game & download media/);
@@ -240,7 +240,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     }
     await page.locator('#add-submit').click();
     await page.locator('#add-game').waitFor({state:'hidden'});
-    await page.locator('#sheet-title').filter({hasText:'Super Metroid'}).waitFor();
+    await page.locator('#sheet-title').filter({hasText:'Space Hunter'}).waitFor();
     // The overlay draws its rows from a second request after the title: waited for, not raced.
     await page.locator('.media-row-item:not(.missing)').first().waitFor({timeout:10000}).catch(() => {});
     assert.ok(await page.locator('.media-row-item:not(.missing)').count() > 0,'downloaded artwork is visible without reloading');
@@ -249,15 +249,15 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     // Sorting/filtering the complete library, across systems, before the 300-card limit.
     const game = (name, details = {}) => ({ name, label: name, key: name, path: `/app0/content/${name}.zip`, media: [], ...details });
     const library = { systems: [
-      { id: 'snes', name: 'Super Nintendo', games: [game('Zelda', { released: '1991', rating: '0.9', genre: 'Adventure', developer: 'Nintendo', publisher: 'Nintendo' }), game('Alpha 10'), game('Éclair', { released: '1994-04-18', rating: '0.8' })] },
-      { id: 'nes', name: 'Nintendo', games: [game('Alpha 2', { released: '1987-01', rating: '0', media: ['cover', 'screenshot'] }), game('1942', { released: '1985-12-11', rating: '0.5' }), game('!Unknown', { released: 'unknown', rating: 'unrated' })] }
+      { id: 'snes', name: 'Super Nintendo', games: [game('Zenith', { released: '1991', rating: '0.9', genre: 'Adventure', developer: 'Nintendo', publisher: 'Nintendo' }), game('Alpha 10'), game('Éclair', { released: '1994-04-18', rating: '0.8' })] },
+      { id: 'nes', name: 'Nintendo', games: [game('Alpha 2', { released: '1987-01', rating: '0', media: ['cover', 'screenshot'] }), game('1940', { released: '1985-12-11', rating: '0.5' }), game('!Unknown', { released: 'unknown', rating: 'unrated' })] }
     ] };
     const libraryRoute = route => route.fulfill({ json: library });
     await page.route('**/api/library', libraryRoute);
     await page.locator('#refresh-games').click();
     await page.locator('.game-info strong').filter({hasText: '!Unknown'}).waitFor();
     const titles = () => page.locator('.game-info strong').allTextContents();
-    assert.deepEqual(await titles(), ['!Unknown', '1942', 'Alpha 2', 'Alpha 10', 'Éclair', 'Zelda']);
+    assert.deepEqual(await titles(), ['!Unknown', '1940', 'Alpha 2', 'Alpha 10', 'Éclair', 'Zenith']);
     await page.locator('.game-card', { hasText: 'Alpha 2' }).locator('.game-select').check();
     const letter = value => page.locator(`#games-letters button[data-letter="${value}"]`);
     await letter('A').click();
@@ -278,22 +278,22 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     await letter('E').click();
     assert.deepEqual(await titles(), ['Éclair']);
     await letter('#').click();
-    assert.deepEqual(await titles(), ['1942', '!Unknown']);
+    assert.deepEqual(await titles(), ['1940', '!Unknown']);
     await letter('').click();
     await page.locator('#games-sort').selectOption('released');
-    assert.deepEqual(await titles(), ['Éclair', 'Zelda', 'Alpha 2', '1942', '!Unknown', 'Alpha 10']);
+    assert.deepEqual(await titles(), ['Éclair', 'Zenith', 'Alpha 2', '1940', '!Unknown', 'Alpha 10']);
     await page.locator('#games-direction').click();
-    assert.deepEqual(await titles(), ['1942', 'Alpha 2', 'Zelda', 'Éclair', '!Unknown', 'Alpha 10']);
+    assert.deepEqual(await titles(), ['1940', 'Alpha 2', 'Zenith', 'Éclair', '!Unknown', 'Alpha 10']);
     await page.locator('#games-sort').selectOption('rating');
-    assert.deepEqual(await titles(), ['Alpha 2', '1942', 'Éclair', 'Zelda', '!Unknown', 'Alpha 10']);
+    assert.deepEqual(await titles(), ['Alpha 2', '1940', 'Éclair', 'Zenith', '!Unknown', 'Alpha 10']);
     await page.locator('#games-direction').click();
-    assert.deepEqual(await titles(), ['Zelda', 'Éclair', '1942', 'Alpha 2', '!Unknown', 'Alpha 10']);
+    assert.deepEqual(await titles(), ['Zenith', 'Éclair', '1940', 'Alpha 2', '!Unknown', 'Alpha 10']);
     for (const field of ['genre', 'developer', 'publisher']) {
       await page.locator('#games-sort').selectOption(field);
-      assert.equal((await titles())[0], 'Zelda', `${field}: missing details stay last`);
+      assert.equal((await titles())[0], 'Zenith', `${field}: missing details stay last`);
     }
     await page.locator('#games-sort').selectOption('system');
-    assert.deepEqual(await titles(), ['Alpha 10', 'Éclair', 'Zelda', '!Unknown', '1942', 'Alpha 2']);
+    assert.deepEqual(await titles(), ['Alpha 10', 'Éclair', 'Zenith', '!Unknown', '1940', 'Alpha 2']);
     await page.reload();
     await page.waitForFunction(() => document.querySelectorAll('.game-card').length === 6);
     assert.equal(await page.locator('#games-sort').inputValue(), 'system');
@@ -304,14 +304,14 @@ const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), true, 'Games has no sideways scroll on a phone');
     await letter('Z').focus(); await page.keyboard.press('Enter');
-    assert.deepEqual(await titles(), ['Zelda']);
+    assert.deepEqual(await titles(), ['Zenith']);
     if (process.env.WEBUI_GAMES_SCREENSHOTS) await page.screenshot({ path: process.env.WEBUI_GAMES_SCREENSHOTS + '-phone.png', fullPage: true });
     await letter('').click();
     library.systems[0].games.push(...Array.from({ length: 301 }, (_, i) => game(`Bulk ${i}`)));
     await page.locator('#refresh-games').click();
     await page.waitForFunction(() => document.querySelectorAll('.game-card').length === 300);
     await page.locator('#games-direction').click();
-    assert.equal((await titles())[0], 'Zelda', 'sort before slicing the first 300');
+    assert.equal((await titles())[0], 'Zenith', 'sort before slicing the first 300');
     await page.locator('.games-more').click();
     assert.equal(await page.locator('.game-card').count(), 307);
     await letter('A').click(); await letter('').click();

@@ -8,7 +8,7 @@
   "raw_lines": 8,
   "raw_bytes": 1357,
   "lines": [
-    "library through the daemon after the fixes: entries 1024 unique 1024 duplicated 0 (before: 1039 entries, 14 paths twice); PS1: ['Crash Bandicoot (USA).cue'] (the listed .bin dropped)",
+    "library through the daemon after the fixes: entries 1024 unique 1024 duplicated 0 (before: 1039 entries, 14 paths twice); PS1: ['PlayStation Test Game (USA).cue'] (the listed .bin dropped)",
     "crash 1: daemon SIGSEGV, fault 8 bytes below rsp in a 64 KiB frame (a worker's stack); fixed: heap buffers, 1 MiB worker stacks; the crashed job resumed by itself on the next daemon",
     "sony ssl from the daemon: sceHttpSendRequest failed (0x8095f00c) for every request",
     "all systems, ps5 mode (http, before curl):  148.2s done {'ambiguous': 61, 'done': 520, 'partial': 28, 'skipped': 181, 'unmatched': 234} downloaded {'files': 1593, 'bytes': 179634410} transferred {'files': 0, 'bytes': 0} tasks {'queued': 0, 'leased': 0}",

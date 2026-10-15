@@ -79,7 +79,7 @@ index 26a123c081..b8c89961af 100644
 +// PS5: guest memory is direct memory, through the platform layer (my payload SDK
 +// fork, ps5platform/shm.h), rather than a shared-memory object. Every view of a
 +// shared-memory object was charged to the title's flexible memory (448 MiB for
-+// the whole title), and Wind Waker's fake-VMEM mirrors - one 32 MiB region
++// the whole title), and GameCube Test Game's fake-VMEM mirrors - one 32 MiB region
 +// mapped at up to 28 logical addresses - exhausted it: the mappings failed and a
 +// fastmem access faulted through a missing view (2026-09-24). A direct-memory
 +// object is charged to nothing but the 12 GiB direct pool, and can be mapped at
@@ -593,8 +593,8 @@ index 7d27a1ea3c..0d882dcb74 100644
 +// 6x internal resolution, asynchronous ubershaders -- exact ubershaders draw
 +// while the specialised shaders compile in the background, so nothing is
 +// skipped and nothing stalls -- 16x anisotropic filtering, and texture decoding
-+// on the GPU. Every accuracy setting keeps Dolphin's default. Resident Evil 4,
-+// Melee, Wind Waker and Mario Kart Wii held 100% in every window after boot.
++// on the GPU. Every accuracy setting keeps Dolphin's default. GameCube Test Game 3,
++// GameCube Test Game 2, GameCube Test Game and Wii Test Game held 100% in every window after boot.
 +static void Ps5ApplyDefaultProfile()
 +{
 +  static const struct
@@ -801,7 +801,7 @@ index b4003b25b1..0275157ec2 100644
 +// (Presenter::ViSwap), inside the GPU loop while the CPU thread emulates on. At
 +// the end of the run instead, the frontend's present waited on the display
 +// after the frame step had stopped the CPU thread, and the time it lost there
-+// left the audio short (Wind Waker: 37-7268 silent frames a ten-second window).
++// left the audio short (GameCube Test Game: 37-7268 silent frames a ten-second window).
 +// EndRun covers a run in which no field was output at all.
 +static retro_video_refresh_t s_frontend_video_cb;
 +static bool s_frame_sent;

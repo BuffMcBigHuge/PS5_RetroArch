@@ -3054,7 +3054,7 @@ static void ps5_core_option_default(struct core_option *option)
         # three images held one frame (16.7 ms) where they hold two (33 ms) at
         # 60 Hz; the second present of every frame then waited on the thread
         # that runs the core, and Dolphin's frame-stepped emulation lost 4-12%
-        # of Wind Waker's speed under ubershaders (2026-09-25, ../PS5_Vulkan
+        # of GameCube Test Game's speed under ubershaders (2026-09-25, ../PS5_Vulkan
         # R74). (images - 1) * interval + 1 keeps the frames of lookahead the
         # setting names, within the surface's maxImageCount (clamped below).
         "gfx/common/vulkan_common.c",

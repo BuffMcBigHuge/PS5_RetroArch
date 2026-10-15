@@ -3,7 +3,7 @@
   "recorded": "2026-09-25",
   "console_run": "not read this run",
   "revision": "title 5253301f: Dolphin core before the duplicate-field fix, driver R73",
-  "command": "tooling/dolphin-profiles/p1-accurate.txt as /app0/dolphin-options.txt; Wind Waker from my entry state; no pad input for 150 s; driver profile armed",
+  "command": "tooling/dolphin-profiles/p1-accurate.txt as /app0/dolphin-options.txt; GameCube Test Game from my entry state; no pad input for 150 s; driver profile armed",
   "raw_capture": "klog/wwsmp73b-trace.txt",
   "raw_lines": 283,
   "raw_bytes": 38497,

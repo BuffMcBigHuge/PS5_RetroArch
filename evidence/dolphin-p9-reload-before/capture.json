@@ -3,8 +3,8 @@
   "recorded": "2026-09-25T11:56:13Z",
   "console_run": "",
   "revision": "title 26c9daa0: driver R78 with the direct_live profile; RetroArch without patch 0092",
-  "command": "tooling/dolphin-profiles/p1-accurate.txt; Melee from my entry state; the pad script's four Quick Menu closes and RELOADs; driver profile armed",
-  "raw_capture": "klog/p9-long-ssbm-reload-excerpt.txt",
+  "command": "tooling/dolphin-profiles/p1-accurate.txt; GameCube Test Game 2 from my entry state; the pad script's four Quick Menu closes and RELOADs; driver profile armed",
+  "raw_capture": "klog/p9-long-gc2-reload-excerpt.txt",
   "raw_lines": 55,
   "raw_bytes": 2100,
   "lines": [

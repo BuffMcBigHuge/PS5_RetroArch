@@ -1,14 +1,14 @@
 {
-  "step": "dolphin-wind-waker-boot",
+  "step": "dolphin-gamecube-boot",
   "recorded": "2026-09-24T16:14:34Z",
   "console_run": "dol12",
   "revision": "port (this commit), driver ../PS5_Vulkan 9e63105 (R58), libretro/dolphin c6630001e0 + patches/dolphin/ps5-port.patch",
-  "command": "args.txt: -L /app0/cores/dolphin_libretro.so '/app0/content/Nintendo - GameCube/<Wind Waker>.rvz' --max-frames=1800 --max-frames-ss (screenshot fetched and removed; state snapshotted and restored)",
+  "command": "args.txt: -L /app0/cores/dolphin_libretro.so '/app0/content/Nintendo - GameCube/<GameCube Test Game>.rvz' --max-frames=1800 --max-frames-ss (screenshot fetched and removed; state snapshotted and restored)",
   "raw_capture": "klog/dol12-evidence.txt",
   "raw_lines": 18,
   "raw_bytes": 1049,
   "lines": [
-    "== dolphin: Legend of Zelda, The - The Wind Waker (USA).rvz, 1800 frames, JIT64 + fastmem, Vulkan",
+    "== dolphin: GameCube Test Game (USA).rvz, 1800 frames, JIT64 + fastmem, Vulkan",
     "core loader: ready symbols=29383 relocations=64546 mapped_bytes=36683776",
     "core loader: ready symbols=29383 relocations=64546 mapped_bytes=36683776",
     "[ps5vk] output: 119.88 Hz selected",

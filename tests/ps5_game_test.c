@@ -47,10 +47,10 @@ int main(int argc, char **argv)
     memset(&game, 0, sizeof(game));
     snprintf(game.core, sizeof(game.core), "%s", "/app0/cores/snes9x_libretro.so");
     snprintf(game.content, sizeof(game.content), "%s",
-             "/app0/content/SNES/Donkey Kong (USA) [!].zip");
+             "/app0/content/SNES/Jungle Run (USA) [!].zip");
     snprintf(game.frontend, sizeof(game.frontend), "%s", "/app0/es-de/es-de.bin");
     snprintf(game.state, sizeof(game.state), "%s",
-             "snes\t/app0/content/SNES/Donkey Kong (USA) [!].zip");
+             "snes\t/app0/content/SNES/Jungle Run (USA) [!].zip");
     snprintf(path, sizeof(path), "%s/request.txt", dir);
     assert(ps5_game_write(path, &game, 0) == 0);
     assert(ps5_game_read(path, &back, &kind) == 0 && kind == 0);
@@ -68,13 +68,12 @@ int main(int argc, char **argv)
     assert(ps5_game_read(path, &back, &kind) != 0); /* no kind */
 
     /* Launch commands, as frontends expand them. */
-    assert(ps5_game_parse_command(
-               "/app0/eboot.bin -L /app0/cores/snes9x_libretro.so "
-               "/app0/content/Nintendo\\ -\\ SNES/Donkey\\ Kong\\ Country\\ 2\\ \\(USA\\).zip",
-               &game) == 0);
+    assert(
+        ps5_game_parse_command("/app0/eboot.bin -L /app0/cores/snes9x_libretro.so "
+                               "/app0/content/Nintendo\\ -\\ SNES/Jungle\\ Run\\ 2\\ \\(USA\\).zip",
+                               &game) == 0);
     assert(strcmp(game.core, "/app0/cores/snes9x_libretro.so") == 0);
-    assert(strcmp(game.content, "/app0/content/Nintendo - SNES/Donkey Kong Country 2 (USA).zip") ==
-           0);
+    assert(strcmp(game.content, "/app0/content/Nintendo - SNES/Jungle Run 2 (USA).zip") == 0);
     assert(ps5_game_parse_command("/app0/eboot.bin \"/app0/content/a b/it's.iso\"", &game) == 0 &&
            !game.core[0] && strcmp(game.content, "/app0/content/a b/it's.iso") == 0);
     assert(ps5_game_parse_command(

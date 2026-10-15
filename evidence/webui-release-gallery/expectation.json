@@ -10,5 +10,5 @@
   "must_not_contain": [
     "FAILED"
   ],
-  "human_check": "All ten screenshots visually inspected. Neo Geo B filter has 14 games. Add Game uses unsaved Super Metroid database details. Blazing Star illustrates Media, Details and Files; no existing savestate is claimed. Local release preview shows each caption and preserves its QR gallery."
+  "human_check": "All ten screenshots visually inspected. Neo Geo B filter has 14 games. Add Game uses unsaved Space Hunter database details. Shooter Test Game illustrates Media, Details and Files; no existing savestate is claimed. Local release preview shows each caption and preserves its QR gallery."
 }

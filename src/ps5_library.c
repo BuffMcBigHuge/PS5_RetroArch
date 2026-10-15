@@ -1175,7 +1175,7 @@ static void scan_games(struct scanning *scanning, const char *path, int depth)
     free_listing(&listing);
 }
 
-/* DOS: a game is a folder, started by the program named like it (doom/DOOM.EXE), or an
+/* DOS: a game is a folder, started by the program named like it (shooter/SHOOTER.EXE), or an
  * archive or disc image of its own. */
 static void scan_dos(struct scanning *scanning, const char *path, int depth)
 {
@@ -1386,7 +1386,7 @@ int ps5_library_load(struct ps5_library *library, const char *playlists, const c
     return ps5_library_load_content(library, playlists, info, cores, NULL);
 }
 
-/* A disc's track listed beside its index (RetroArch's scan lists Crash Bandicoot's .bin
+/* A disc's track listed beside its index (RetroArch's scan lists PlayStation Test Game's .bin
  * and its .cue): the index is the game, the track is dropped, as the content scan does. */
 static int path_extension_is(const char *path, const char *const *extensions)
 {

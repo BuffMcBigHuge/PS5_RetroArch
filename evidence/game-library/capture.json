@@ -14,7 +14,7 @@
     "es_log: Only parsing the gamelist.xml files, not scanning system directories",
     "es_log: Parsed configuration for 209 systems, loaded 14 systems (collections not included)",
     "es_log: Total game count: 15",
-    "es_log: Back from \"Donkey Kong Country 2 - Diddy's Kong Quest (USA) (En,Fr) (Rev 1)\" after 10 seconds in RetroArch (status 0)",
+    "es_log: Back from \"Jungle Run 2 - Partner's Island Quest (USA) (En,Fr) (Rev 1)\" after 10 seconds in RetroArch (status 0)",
     "custom_systems/es_systems.xml: 14 systems: arcade cps fbneo gb gba gbc mame n3ds neogeo nes ps2 psp psx snes",
     "psx command: /app0/eboot.bin -L /app0/cores/mednafen_psx_hw_libretro.so %ROM%",
     "gamelist snes: playcount 2, playtime 21 (kept from earlier ES-DE runs, this play added)",

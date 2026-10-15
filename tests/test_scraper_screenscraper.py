@@ -31,10 +31,10 @@ USER, PASSWORD = 'tester', 'user-secret-Pw9'
 SNES = '4'
 # The fake API's games: id -> (names by region, the checksum and file name it knows them by).
 GAMES = {
-    '1001': ({'us': 'Super Metroid', 'jp': 'Super Metroid (JP)'}, 'D63ED5F8', ''),
-    '1002': ({'us': 'Chrono Trigger', 'jp': 'Chrono Trigger (JP)'}, '', ''),
-    '1003': ({'wor': 'Chrono Trigger: Jet Bike Special'}, '', ''),
-    '1004': ({'us': 'Donkey Kong Country 2'}, '', "Donkey Kong Country 2 - Diddy's Kong Quest (USA).zip"),
+    '1001': ({'us': 'Space Hunter', 'jp': 'Space Hunter (JP)'}, 'D63ED5F8', ''),
+    '1002': ({'us': 'Time Voyager', 'jp': 'Time Voyager (JP)'}, '', ''),
+    '1003': ({'wor': 'Time Voyager: Hover Race Special'}, '', ''),
+    '1004': ({'us': 'Jungle Run 2'}, '', "Jungle Run 2 - Partner's Island Quest (USA).zip"),
 }
 TYPES = {'box-2D': 'png', 'ss': 'png', 'video-normalized': 'mp4', 'wheel-hd': 'png'}
 
@@ -148,10 +148,10 @@ class ScreenScraper(unittest.TestCase):
         (self.root / 'info/snes9x_libretro.info').write_text(
             'display_name = "Snes9x"\ncorename = "Snes9x"\ndatabase = "' + DB + '"\nsupported_extensions = "sfc|smc|zip"\n')
         self.games = {  # label -> (path, crc)
-            'Super Metroid (Japan, USA) (En,Ja)': ('/app0/content/SNES/Super Metroid (Japan, USA) (En,Ja).sfc', 'D63ED5F8|crc'),  # by checksum
-            "Donkey Kong Country 2 - Diddy's Kong Quest (USA)": ("/app0/content/SNES/Donkey Kong Country 2 - Diddy's Kong Quest (USA).zip", ''),  # by file name
-            'Chrono Trigger (1995)': ('/app0/content/SNES/Chrono Trigger (1995).sfc', ''),  # by search, the same title
-            'Chrono': ('/app0/content/SNES/Chrono.sfc', ''),  # search: two titles, ambiguous
+            'Space Hunter (Japan, USA) (En,Ja)': ('/app0/content/SNES/Space Hunter (Japan, USA) (En,Ja).sfc', 'D63ED5F8|crc'),  # by checksum
+            "Jungle Run 2 - Partner's Island Quest (USA)": ("/app0/content/SNES/Jungle Run 2 - Partner's Island Quest (USA).zip", ''),  # by file name
+            'Time Voyager (1995)': ('/app0/content/SNES/Time Voyager (1995).sfc', ''),  # by search, the same title
+            'Voyager': ('/app0/content/SNES/Voyager.sfc', ''),  # search: two titles, ambiguous
             'Totally Unknown Homebrew': ('/app0/content/SNES/Totally Unknown Homebrew.sfc', ''),  # nowhere
         }
         for path, _ in self.games.values():  # the files, so their sizes are sent
@@ -272,7 +272,7 @@ class ScreenScraper(unittest.TestCase):
     def test_ps5_mode_checksum_name_search_details_and_thread_limit(self):
         self.assertEqual(self.sign_in()[0], 200)
         # Database IDs belong to their source; a LaunchBox choice is not a ScreenScraper ID.
-        key = self.key('Super Metroid (Japan, USA) (En,Ja)')
+        key = self.key('Space Hunter (Japan, USA) (En,Ja)')
         query = urllib.parse.urlencode({'system': 'snes', 'game': key})
         self.assertEqual(self.request('POST', '/api/library/game?' + query,
                          json.dumps({'partial': 'true', 'launchbox_id': '2002'}).encode())[0], 200)
@@ -285,16 +285,16 @@ class ScreenScraper(unittest.TestCase):
         self.assertFalse(any(q.get('gameid') == '2002' for q in infos))
         self.assertTrue(any(q.get('crc') == 'D63ED5F8' and q.get('romtaille') == '300' for q in infos))
         library = self.root / 'library/snes'
-        metroid = self.key('Super Metroid (Japan, USA) (En,Ja)')
-        self.assertEqual((library / 'covers' / f'{metroid}.png').read_bytes(), media_bytes('1001', 'box-2D', 'us'))  # the region asked for
-        self.assertEqual((library / 'videos' / f'{metroid}.mp4').read_bytes(), media_bytes('1001', 'video-normalized', 'us'))
-        meta = (library / 'metadata' / f'{metroid}.meta').read_text()
-        for line in ('name = "Super Metroid"', 'description = "Histoire 1001"', 'genre = "Action FR"', 'rating = "0.85"',
+        hunter = self.key('Space Hunter (Japan, USA) (En,Ja)')
+        self.assertEqual((library / 'covers' / f'{hunter}.png').read_bytes(), media_bytes('1001', 'box-2D', 'us'))  # the region asked for
+        self.assertEqual((library / 'videos' / f'{hunter}.mp4').read_bytes(), media_bytes('1001', 'video-normalized', 'us'))
+        meta = (library / 'metadata' / f'{hunter}.meta').read_text()
+        for line in ('name = "Space Hunter"', 'description = "Histoire 1001"', 'genre = "Action FR"', 'rating = "0.85"',
                      'released = "1994-04-18"', 'developer = "Studio"', 'players = "1-2"', 'source = "screenscraper"'):
             self.assertIn(line, meta)
-        dk = self.key("Donkey Kong Country 2 - Diddy's Kong Quest (USA)")
+        dk = self.key("Jungle Run 2 - Partner's Island Quest (USA)")
         self.assertTrue((library / 'covers' / f'{dk}.png').exists())
-        self.assertEqual((library / 'covers' / f'{self.key("Chrono Trigger (1995)")}.png').read_bytes(),
+        self.assertEqual((library / 'covers' / f'{self.key("Time Voyager (1995)")}.png').read_bytes(),
                          media_bytes('1002', 'box-2D', 'us'))
         # Nothing on the console's disk holds the user's password but its own account file.
         for path in self.root.rglob('*'):
@@ -305,23 +305,23 @@ class ScreenScraper(unittest.TestCase):
         self.assertEqual(recap['totals'], {k: {'got': 3, 'had': 0, 'missed': 2} for k in ('cover', 'screenshot', 'video', 'details')})
         self.assertEqual(recap['kinds'], ['cover', 'screenshot', 'video', 'details'])
         games = {g['label']: g for g in recap['systems'][0]['games']}
-        self.assertEqual(games['Super Metroid (Japan, USA) (En,Ja)']['got'], ['cover', 'screenshot', 'video', 'details'])
-        self.assertEqual(games['Super Metroid (Japan, USA) (En,Ja)']['matched'], 'Super Metroid')
+        self.assertEqual(games['Space Hunter (Japan, USA) (En,Ja)']['got'], ['cover', 'screenshot', 'video', 'details'])
+        self.assertEqual(games['Space Hunter (Japan, USA) (En,Ja)']['matched'], 'Space Hunter')
         self.assertEqual((games['Totally Unknown Homebrew']['state'], games['Totally Unknown Homebrew']['missed']),
                          ('unmatched', ['cover', 'screenshot', 'video', 'details']))
         # The ambiguous game: two titles offered as "Name [id]", one chosen.
         ambiguous = next(p for p in job['problems'] if p['state'] == 'ambiguous')
-        self.assertEqual(sorted(ambiguous['candidates']), ['Chrono Trigger [1002]', 'Chrono Trigger: Jet Bike Special [1003]'])
+        self.assertEqual(sorted(ambiguous['candidates']), ['Time Voyager [1002]', 'Time Voyager: Hover Race Special [1003]'])
         status, body = self.request('POST', f'/api/scraper/resolve?id={job_id}&item={ambiguous["item"]}&action=choose&value='
-                                    + urllib.parse.quote('Chrono Trigger: Jet Bike Special [1003]'))
+                                    + urllib.parse.quote('Time Voyager: Hover Race Special [1003]'))
         self.assertEqual(status, 200, body)
         self.wait(job_id, lambda j: j['state'] == 'done' and not j['counts'].get('pending') and not j['counts'].get('working'))
-        self.assertEqual((library / 'covers' / f'{self.key("Chrono")}.png').read_bytes(), media_bytes('1003', 'box-2D', 'us'))
+        self.assertEqual((library / 'covers' / f'{self.key("Voyager")}.png').read_bytes(), media_bytes('1003', 'box-2D', 'us'))
         # A search from the page, by the user's words.
         unmatched = next(p for p in job['problems'] if p['state'] == 'unmatched')
-        status, body = self.request('POST', f'/api/scraper/resolve?id={job_id}&item={unmatched["item"]}&action=search&value=metroid')
+        status, body = self.request('POST', f'/api/scraper/resolve?id={job_id}&item={unmatched["item"]}&action=search&value=hunter')
         found = next(p for p in json.loads(body)['job']['problems'] if p['item'] == unmatched['item'])
-        self.assertEqual(found['candidates'], ['Super Metroid [1001]'])
+        self.assertEqual(found['candidates'], ['Space Hunter [1001]'])
         # One game at a time when that is all the account may do.
         with self.source.lock:
             self.source.reset(); self.source.max_threads = '1'
@@ -338,19 +338,19 @@ class ScreenScraper(unittest.TestCase):
     def test_details_alone_or_media_alone(self):
         self.assertEqual(self.sign_in()[0], 200)
         library = self.root / 'library/snes'
-        metroid = self.key('Super Metroid (Japan, USA) (En,Ja)')
+        hunter = self.key('Space Hunter (Japan, USA) (En,Ja)')
         # Media without details: the pictures, a name, no description.
         self.wait(self.start(kinds='cover', details=False))
-        self.assertTrue((library / 'covers' / f'{metroid}.png').exists())
-        meta = (library / 'metadata' / f'{metroid}.meta').read_text()
-        self.assertIn('name = "Super Metroid"', meta)
+        self.assertTrue((library / 'covers' / f'{hunter}.png').exists())
+        meta = (library / 'metadata' / f'{hunter}.meta').read_text()
+        self.assertIn('name = "Space Hunter"', meta)
         self.assertNotIn('description', meta)
         # Details alone: no kind of media at all, the details filled, no media fetched.
         with self.source.lock:
             self.source.calls.clear()
         job = self.wait(self.start(kinds='', details=True))
         self.assertEqual(job['counts'], {'ambiguous': 1, 'done': 3, 'unmatched': 1})
-        self.assertIn('description = "Histoire 1001"', (library / 'metadata' / f'{metroid}.meta').read_text())
+        self.assertIn('description = "Histoire 1001"', (library / 'metadata' / f'{hunter}.meta').read_text())
         self.assertFalse(any(e == 'medias.php' for e, _ in self.source.calls))
         recap = json.loads(self.request('GET', f'/api/scraper/recap?id={job["id"]}')[1])['recap']
         self.assertEqual((recap['kinds'], recap['totals']['details']), (['details'], {'got': 3, 'had': 0, 'missed': 2}))
@@ -358,7 +358,7 @@ class ScreenScraper(unittest.TestCase):
         again = self.wait(self.start(kinds='', details=True))
         self.assertEqual(again['counts'].get('skipped'), 3)
         # A hand-edited description survives replacing everything.
-        path = library / 'metadata' / f'{metroid}.meta'
+        path = library / 'metadata' / f'{hunter}.meta'
         path.write_text(path.read_text().replace('Histoire 1001', 'Mine') + 'edited = "description"\n')
         self.wait(self.start(kinds='', details=True, overwrite=True))
         self.assertIn('description = "Mine"', path.read_text())
@@ -401,26 +401,26 @@ class ScreenScraper(unittest.TestCase):
         # the details): not one picture asked of it.
         self.assertEqual(sorted(self.ss_media()), ['video-normalized'] * 3)
         library = self.root / 'library/snes'
-        metroid = self.key('Super Metroid (Japan, USA) (En,Ja)')
-        self.assertEqual((library / 'covers' / f'{metroid}.png').read_bytes(), base.image('Super Metroid (Japan, USA) (En,Ja)', 'Named_Boxarts'))
-        self.assertEqual((library / 'videos' / f'{metroid}.mp4').read_bytes(), media_bytes('1001', 'video-normalized', 'us'))
-        self.assertIn('description = "English story 1001"', (library / 'metadata' / f'{metroid}.meta').read_text())
+        hunter = self.key('Space Hunter (Japan, USA) (En,Ja)')
+        self.assertEqual((library / 'covers' / f'{hunter}.png').read_bytes(), base.image('Space Hunter (Japan, USA) (En,Ja)', 'Named_Boxarts'))
+        self.assertEqual((library / 'videos' / f'{hunter}.mp4').read_bytes(), media_bytes('1001', 'video-normalized', 'us'))
+        self.assertIn('description = "English story 1001"', (library / 'metadata' / f'{hunter}.meta').read_text())
         # The game no source could tell: libretro's choices first; once chosen, what is
         # left goes to ScreenScraper, which offers its own choices for it.
-        chrono = next(p for p in job['problems'] if p['label'] == 'Chrono')
-        self.assertIn('Chrono Trigger (USA)', chrono['candidates'])
-        self.assertIn('libretro offers these', chrono['message'])
-        self.request('POST', f'/api/scraper/resolve?id={job_id}&item={chrono["item"]}&action=choose&value=' + urllib.parse.quote('Chrono Trigger (USA)'))
+        voyager = next(p for p in job['problems'] if p['label'] == 'Voyager')
+        self.assertIn('Time Voyager (USA)', voyager['candidates'])
+        self.assertIn('libretro offers these', voyager['message'])
+        self.request('POST', f'/api/scraper/resolve?id={job_id}&item={voyager["item"]}&action=choose&value=' + urllib.parse.quote('Time Voyager (USA)'))
         job = self.wait(job_id, lambda j: j['state'] == 'done' and not j['counts'].get('pending') and not j['counts'].get('working'))
-        chrono = next(p for p in job['problems'] if p['label'] == 'Chrono')
-        self.assertIn('Some found; for the rest, ScreenScraper offers these', chrono['message'])
-        self.assertIn('Chrono Trigger: Jet Bike Special [1003]', chrono['candidates'])
-        self.assertTrue((library / 'covers' / 'Chrono.png').exists())
-        self.request('POST', f'/api/scraper/resolve?id={job_id}&item={chrono["item"]}&action=choose&value=' + urllib.parse.quote('Chrono Trigger: Jet Bike Special [1003]'))
+        voyager = next(p for p in job['problems'] if p['label'] == 'Voyager')
+        self.assertIn('Some found; for the rest, ScreenScraper offers these', voyager['message'])
+        self.assertIn('Time Voyager: Hover Race Special [1003]', voyager['candidates'])
+        self.assertTrue((library / 'covers' / 'Voyager.png').exists())
+        self.request('POST', f'/api/scraper/resolve?id={job_id}&item={voyager["item"]}&action=choose&value=' + urllib.parse.quote('Time Voyager: Hover Race Special [1003]'))
         job = self.wait(job_id, lambda j: j['state'] == 'done' and not j['counts'].get('pending') and not j['counts'].get('working'))
         self.assertEqual(job['counts'], {'done': 4, 'unmatched': 1})
-        self.assertEqual((library / 'videos' / 'Chrono.mp4').read_bytes(), media_bytes('1003', 'video-normalized', 'us'))
-        self.assertEqual((library / 'covers' / 'Chrono.png').read_bytes(), base.image('Chrono Trigger (USA)', 'Named_Boxarts'))  # libretro's kept
+        self.assertEqual((library / 'videos' / 'Voyager.mp4').read_bytes(), media_bytes('1003', 'video-normalized', 'us'))
+        self.assertEqual((library / 'covers' / 'Voyager.png').read_bytes(), base.image('Time Voyager (USA)', 'Named_Boxarts'))  # libretro's kept
         unknown = next(p for p in job['problems'] if p['label'] == 'Totally Unknown Homebrew')
         self.assertEqual(unknown['message'], 'Not found at libretro or ScreenScraper. Search by name or skip.')
         recap = json.loads(self.request('GET', f'/api/scraper/recap?id={job_id}')[1])['recap']

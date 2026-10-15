@@ -1663,7 +1663,7 @@ const std::map<std::string, std::vector<std::string>> launchbox_platforms = {
     {"xbox", {"Microsoft Xbox"}},
     {"zxspectrum", {"Sinclair ZX Spectrum"}},
 };
-/* Systems whose games are romsets ("mslug3"): their titles come from MAME's names. */
+/* Systems whose games are romsets ("runner3"): their titles come from MAME's names. */
 bool arcade_system(const std::string &system)
 {
     static const std::set<std::string> arcade = {"arcade", "mame",  "fbneo",     "cps",
@@ -1949,7 +1949,7 @@ bool launchbox_prepare(Http &http, Job &job, std::string &why,
     for (auto &file : files)
         if (file.second)
             ok = std::fclose(file.second) == 0 && ok;
-    /* MAME's romset names, for arcade games: "mslug3" is "Metal Slug 3". */
+    /* MAME's romset names, for arcade games: "runner3" is "Run and Gun 3". */
     std::FILE *names = std::fopen((folder + "/arcade.names.new").c_str(), "w");
     XmlRecords mame;
     mame.on_record = [&](const std::string &record, const Fields &f)

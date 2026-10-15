@@ -3,7 +3,7 @@
   "recorded": "2026-09-25",
   "console_run": "not read this run",
   "revision": "title f2585b8f: driver R73, three swapchain images at 119.88 Hz with a swap interval of 2",
-  "command": "tooling/dolphin-profiles/p2-ubershaders-1x.txt as /app0/dolphin-options.txt; Wind Waker from my entry state; driver profile armed",
+  "command": "tooling/dolphin-profiles/p2-ubershaders-1x.txt as /app0/dolphin-options.txt; GameCube Test Game from my entry state; driver profile armed",
   "raw_capture": "klog/p2-ubershaders-1x-ww-trace.txt",
   "raw_lines": 112,
   "raw_bytes": 16467,

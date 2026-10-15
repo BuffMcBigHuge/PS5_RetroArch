@@ -3,7 +3,7 @@
   "recorded": "2026-09-25",
   "console_run": "not read this run",
   "revision": "title f2585b8f: duplicate (NULL) video_cb from Presenter::ViSwap, end-of-run fallback",
-  "command": "tooling/dolphin-profiles/p1-accurate.txt as /app0/dolphin-options.txt; Wind Waker from my entry state; no pad input for 150 s; driver profile armed",
+  "command": "tooling/dolphin-profiles/p1-accurate.txt as /app0/dolphin-options.txt; GameCube Test Game from my entry state; no pad input for 150 s; driver profile armed",
   "raw_capture": "klog/ww-dupecb2-trace.txt",
   "raw_lines": 206,
   "raw_bytes": 22446,

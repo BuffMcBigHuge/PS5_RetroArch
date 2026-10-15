@@ -12,5 +12,5 @@
     "frontend capture PASS"
   ],
   "must_not_contain": [],
-  "human_check": "The 30 s capture (klog/previews/esde-alekfull-snes-1920x1080.png) shows Alekfull NX's SNES system view: the Super Nintendo logo, Super Metroid artwork and the system carousel."
+  "human_check": "The 30 s capture (klog/previews/esde-alekfull-snes-1920x1080.png) shows Alekfull NX's SNES system view: the Super Nintendo logo, Space Hunter artwork and the system carousel."
 }

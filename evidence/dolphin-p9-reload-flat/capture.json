@@ -3,7 +3,7 @@
   "recorded": "2026-09-25T19:25:07Z",
   "console_run": "",
   "revision": "title 9a84b116: driver 2f1e447, RetroArch patch 0093 on 35c905b",
-  "command": "tooling/dolphin-profiles/p1-accurate.txt; Melee from my entry state; the pad script's four Quick Menu closes and RELOADs; driver profile armed",
+  "command": "tooling/dolphin-profiles/p1-accurate.txt; GameCube Test Game 2 from my entry state; the pad script's four Quick Menu closes and RELOADs; driver profile armed",
   "raw_capture": "klog/p9-0093-reload-excerpt.txt",
   "raw_lines": 26,
   "raw_bytes": 2900,

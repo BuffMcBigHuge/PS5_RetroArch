@@ -1,4 +1,4 @@
-# Flycast with Sonic Adventure (USA, Rev A), started with --game=flycast:<the .cue>.
+# Flycast with Dreamcast Test Game (USA, Rev A), started with --game=flycast:<the .cue>.
 # The intro film ends and the title screen shows by about 31 s (the first presses
 # land on the film or its fade); START is pressed on the title screen and again on
 # what follows, so the pictures show the input reaching the game. MARK lines give

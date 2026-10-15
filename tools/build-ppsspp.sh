@@ -128,7 +128,7 @@ link_inputs="$build/core_cxx_runtime.o $build/ps5-libc-shims.o"
 # (its ffmpeg submodule), cross-built with the SDK compiler and the decoder,
 # demuxer and parser set PPSSPP's linux_x86-64.sh selects, without assembly (as
 # that script does) and without zlib. Game menus and cutscenes are videos: without
-# it God of War's title background is left undecoded garbage. Rebuilt only when
+# it PSP Test Game's title background is left undecoded garbage. Rebuilt only when
 # this configuration changes.
 ffmpeg_prefix="$build/ffmpeg"
 ffmpeg_flags=(--enable-cross-compile --target-os=freebsd --arch=x86_64

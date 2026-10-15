@@ -10,7 +10,7 @@
   "lines": [
     "==> tools/run-title.sh --no-build --relaunch-test=1 --relaunch-image=es-de/es-de.bin --frontend-capture=4,20 --frontend-launch --pad-script=tests/pad/game-close-content.txt --watch 80   (base PS5 13.40, build 584d4d27, run 221401)",
     "frontend: mode 'game', test run 1, picker test 0, picker 1, es-de 1, remembered ask, L1 0 -> game",
-    "game mode: /app0/content/Nintendo - Super Nintendo Entertainment System/Donkey Kong Country 2 - Diddy's Kong Quest (USA) (En,Fr) (Rev 1).zip with /app0/cores/snes9x_libretro.so, for /app0/es-de/es-de.bin",
+    "game mode: /app0/content/Nintendo - Super Nintendo Entertainment System/Jungle Run 2 - Partner's Island Quest (USA) (En,Fr) (Rev 1).zip with /app0/cores/snes9x_libretro.so, for /app0/es-de/es-de.bin",
     "input: pad script MENU at 6.01 s: depth 1, list 'main_menu' '', entry 0 of 7 'Unload Core', pending ''",
     "input: pad script press 0 at 6.51 s: 0xc000",
     "input: pad script MENU at 8.51 s: depth 2, list 'quick_menu' 'Quick Menu', entry 0 of 17 'Resume', pending ''",

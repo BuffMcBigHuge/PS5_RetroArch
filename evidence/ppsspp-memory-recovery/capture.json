@@ -633,9 +633,9 @@
   ],
   "interpretation": "CPU and GPU share the measured 12 GiB pool. At high settings the GPU reached 12011339776 bytes in one snapshot. First load recovered after deferred deletion; a later oversized/fragmented allocation failed after retry and returned to dummy/menu without SIGSEGV.",
   "limits": [
-    "One Ghost of Sparta state; 80-second runs, no long-soak claim.",
+    "One PSP Test Game 2 state; 80-second runs, no long-soak claim.",
     "10x with 8x MSAA is not stable gameplay: controlled content shutdown is the intended fallback.",
-    "Original reporter firmware 5.02 Chains of Olympus case not reproduced on their console.",
+    "Original reporter firmware 5.02 PSP Test Game case not reproduced on their console.",
     "All cores rebuilt; this console battery exercises PPSSPP only.",
     "No measured allocator speedup claim.",
     "High-setting final screenshot shows the dummy video buffer; menu resumption is verified by trace and teardown logs."

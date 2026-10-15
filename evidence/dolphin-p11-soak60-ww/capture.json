@@ -3,7 +3,7 @@
   "recorded": "2026-09-25T21:55:12Z",
   "console_run": "",
   "revision": "title 9a84b116: driver 2f1e447, RetroArch patch 0093 on 35c905b",
-  "command": "tooling/dolphin-profiles/p1-accurate.txt; Wind Waker from my entry state, 60 minutes with no input, a screenshot every ten minutes; driver profile armed",
+  "command": "tooling/dolphin-profiles/p1-accurate.txt; GameCube Test Game from my entry state, 60 minutes with no input, a screenshot every ten minutes; driver profile armed",
   "raw_capture": "klog/p11-soak60-ww-excerpt.txt",
   "raw_lines": 93,
   "raw_bytes": 11712,

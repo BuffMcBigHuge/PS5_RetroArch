@@ -3,7 +3,7 @@
   "recorded": "2026-09-25",
   "console_run": "not read this run",
   "revision": "title 5beca7cc: driver R74 (up to five images) and RetroArch patch 0091",
-  "command": "tooling/dolphin-profiles/p2-ubershaders-1x.txt as /app0/dolphin-options.txt; Wind Waker from my entry state; driver profile armed",
+  "command": "tooling/dolphin-profiles/p2-ubershaders-1x.txt as /app0/dolphin-options.txt; GameCube Test Game from my entry state; driver profile armed",
   "raw_capture": "klog/ww-p2-r74-trace.txt",
   "raw_lines": 106,
   "raw_bytes": 16201,

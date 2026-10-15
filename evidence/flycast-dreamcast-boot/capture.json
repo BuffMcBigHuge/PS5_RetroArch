@@ -1,15 +1,15 @@
 {
-  "step": "flycast-sonic-adventure",
+  "step": "flycast-dreamcast-boot",
   "recorded": "2026-10-07T01:15:03Z",
-  "console_run": "base PS5 13.40, runs 210509, 210719 and 211230 (pad script tests/pad/flycast-sonic-adventure.txt)",
+  "console_run": "base PS5 13.40, runs 210509, 210719 and 211230 (pad script tests/pad/flycast-dreamcast-boot.txt)",
   "revision": "PS5_Flycast b95c532f; working tree on 3d5359c (this commit)",
-  "command": "PS5_FRONTENDS='es-de picker' PS5_REUSE_STAGED_CORES=mame tools/build-title.sh; tools/run-title.sh --no-build --no-deploy --game=flycast:/app0/content/Dreamcast/<Sonic Adventure .cue> --pad-script=tests/pad/flycast-sonic-adventure.txt --watch 100",
-  "raw_capture": "klog/flycast-sonic/run-211230.txt",
+  "command": "PS5_FRONTENDS='es-de picker' PS5_REUSE_STAGED_CORES=mame tools/build-title.sh; tools/run-title.sh --no-build --no-deploy --game=flycast:/app0/content/Dreamcast/<Dreamcast Test Game .cue> --pad-script=tests/pad/flycast-dreamcast-boot.txt --watch 100",
+  "raw_capture": "klog/flycast-dreamcast/run-211230.txt",
   "raw_lines": 14,
   "raw_bytes": 1023,
   "lines": [
     "[INFO] [Core] Loading dynamic libretro core from: \"/app0/cores/flycast_libretro.so\".",
-    "[libretro INFO] [BOOT] retro_load_game: /app0/content/Dreamcast/Sonic Adventure (USA) (Rev A)/Sonic Adventure (USA) (Rev A).cue",
+    "[libretro INFO] [BOOT] retro_load_game: /app0/content/Dreamcast/Dreamcast Test Game (USA) (Rev A)/Dreamcast Test Game (USA) (Rev A).cue",
     "[libretro INFO] [BOOT] Did not load BIOS, using reios",
     "[libretro INFO] [RENDERER] GPU Supports Vulkan API: 1.4.354",
     "[libretro INFO] [RENDERER] OITVulkanRenderer::Init",
@@ -21,6 +21,6 @@
     "    pad script: 4 picture(s) saved to klog/pad-211230",
     "==> [run] VERDICT: it exited on its own before 100s",
     "pictures klog/pad-211230: 1 intro film, 2 black (film skipped), 3 title screen, 4 Select a memory card after START",
-    "pictures klog/pad-210719: title screen and attract demo with Sonic at 2880x2160"
+    "pictures klog/pad-210719: title screen and attract demo with the hero at 2880x2160"
   ]
 }

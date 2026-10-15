@@ -1092,7 +1092,7 @@ index 3b2f10317..2e76917bb 100644
  
 +// PS5 port: fast-forward unthrottles and skips drawing. The libretro build draws every
 +// emulated frame while RetroArch fast-forwards, so at a high internal
-+// resolution fast-forward barely outran the GPU (God of War at 10x: ~1.3x).
++// resolution fast-forward barely outran the GPU (PSP Test Game at 10x: ~1.3x).
 +// PPSSPP's own frontends skip frames when fast-forwarding; here, while
 +// RetroArch reports it, three of every four frames are not drawn, and the
 +// frameskip the options set is back the moment it stops. Normal play keeps

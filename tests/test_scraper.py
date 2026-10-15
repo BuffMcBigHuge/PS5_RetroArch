@@ -28,10 +28,10 @@ FOLDERS = {'Named_Boxarts': 'cover', 'Named_Snaps': 'screenshot', 'Named_Titles'
 STORE = {'cover': 'covers', 'screenshot': 'screenshots', 'title': 'titlescreens'}
 # The fake source: names it has, and which of the three images each has.
 SOURCE = {
-    'Donkey Kong Country 2 - Diddy\'s Kong Quest (USA)': ('Named_Boxarts', 'Named_Snaps', 'Named_Titles'),
-    'Super Metroid (Japan, USA) (En,Ja)': ('Named_Boxarts', 'Named_Snaps'),
-    'Chrono Trigger (USA)': ('Named_Boxarts', 'Named_Snaps', 'Named_Titles'),
-    'Chrono Trigger (Japan)': ('Named_Boxarts',),
+    'Jungle Run 2 - Partner\'s Island Quest (USA)': ('Named_Boxarts', 'Named_Snaps', 'Named_Titles'),
+    'Space Hunter (Japan, USA) (En,Ja)': ('Named_Boxarts', 'Named_Snaps'),
+    'Time Voyager (USA)': ('Named_Boxarts', 'Named_Snaps', 'Named_Titles'),
+    'Time Voyager (Japan)': ('Named_Boxarts',),
 }
 SOURCE.update({f'Filler Game {i:02} (USA)': ('Named_Boxarts', 'Named_Snaps', 'Named_Titles') for i in range(24)})
 
@@ -115,10 +115,10 @@ class Scraper(unittest.TestCase):
         (self.root / 'info/snes9x_libretro.info').write_text(
             'display_name = "Snes9x"\ncorename = "Snes9x"\ndatabase = "' + DB + '"\nsupported_extensions = "sfc|smc|zip"\n')
         self.games = {  # label -> path
-            'Donkey Kong Country 2 - Diddy\'s Kong Quest (USA)': '/app0/content/SNES/Donkey Kong Country 2 - Diddy\'s Kong Quest (USA).zip',
-            'Super Metroid (Japan, USA) (En,Ja)': '/app0/content/SNES/Super Metroid (Japan, USA) (En,Ja).sfc',
-            'Chrono Trigger (1995)': '/app0/content/SNES/Chrono Trigger (1995).sfc',  # same title: the USA one, unasked
-            'Chrono Trigger Special Edition': '/app0/content/SNES/Chrono Trigger SE.sfc',  # another title: ambiguous
+            'Jungle Run 2 - Partner\'s Island Quest (USA)': '/app0/content/SNES/Jungle Run 2 - Partner\'s Island Quest (USA).zip',
+            'Space Hunter (Japan, USA) (En,Ja)': '/app0/content/SNES/Space Hunter (Japan, USA) (En,Ja).sfc',
+            'Time Voyager (1995)': '/app0/content/SNES/Time Voyager (1995).sfc',  # same title: the USA one, unasked
+            'Time Voyager Special Edition': '/app0/content/SNES/Time Voyager SE.sfc',  # another title: ambiguous
             'Totally Unknown Homebrew': '/app0/content/SNES/Totally Unknown Homebrew.sfc',  # unmatched
         }
         self.write_playlist(self.games)
@@ -194,18 +194,18 @@ class Scraper(unittest.TestCase):
         job = self.wait(job_id)
         self.assertEqual(job['state'], 'done')
         self.assertEqual(job['counts'], {'ambiguous': 1, 'done': 2, 'partial': 1, 'unmatched': 1})
-        self.assertEqual(self.stored('Chrono Trigger (1995)', 'cover').read_bytes(), image('Chrono Trigger (USA)', 'Named_Boxarts'))
-        dk = 'Donkey Kong Country 2 - Diddy\'s Kong Quest (USA)'
+        self.assertEqual(self.stored('Time Voyager (1995)', 'cover').read_bytes(), image('Time Voyager (USA)', 'Named_Boxarts'))
+        dk = 'Jungle Run 2 - Partner\'s Island Quest (USA)'
         for kind, folder in (('cover', 'Named_Boxarts'), ('screenshot', 'Named_Snaps'), ('title', 'Named_Titles')):
             self.assertEqual(self.stored(dk, kind).read_bytes(), image(dk, folder))
-        self.assertFalse(self.stored('Super Metroid (Japan, USA) (En,Ja)', 'title').exists())  # the source has none
+        self.assertFalse(self.stored('Space Hunter (Japan, USA) (En,Ja)', 'title').exists())  # the source has none
         meta = (self.root / 'library/snes/metadata' / (Path(self.games[dk]).stem + '.meta')).read_text()
-        self.assertIn('name = "Donkey Kong Country 2 - Diddy\'s Kong Quest"', meta)
+        self.assertIn('name = "Jungle Run 2 - Partner\'s Island Quest"', meta)
         self.assertIn('media.cover = "snes/covers/', meta)
         ambiguous = next(p for p in job['problems'] if p['state'] == 'ambiguous')
-        self.assertEqual(ambiguous['label'], 'Chrono Trigger Special Edition')
-        self.assertEqual(ambiguous['candidates'][0], 'Chrono Trigger (USA)')  # the region asked for first
-        self.assertIn('Chrono Trigger (Japan)', ambiguous['candidates'])
+        self.assertEqual(ambiguous['label'], 'Time Voyager Special Edition')
+        self.assertEqual(ambiguous['candidates'][0], 'Time Voyager (USA)')  # the region asked for first
+        self.assertIn('Time Voyager (Japan)', ambiguous['candidates'])
         # A restart keeps what is offered: the server reads the job back with its candidates.
         self.stop_server()
         self.start_server()
@@ -216,15 +216,15 @@ class Scraper(unittest.TestCase):
         self.assertEqual(unmatched['label'], 'Totally Unknown Homebrew')
         # The user chooses: the game's media arrives under its own name.
         status, body = self.request('POST', f'/api/scraper/resolve?id={job_id}&item={ambiguous["item"]}&action=choose&value='
-                                    + urllib.parse.quote('Chrono Trigger (USA)'))
+                                    + urllib.parse.quote('Time Voyager (USA)'))
         self.assertEqual(status, 200, body)
         self.wait(job_id, lambda j: j['state'] == 'done' and not j['counts'].get('pending') and not j['counts'].get('working'))
-        self.assertEqual(self.stored('Chrono Trigger Special Edition', 'cover').read_bytes(), image('Chrono Trigger (USA)', 'Named_Boxarts'))
+        self.assertEqual(self.stored('Time Voyager Special Edition', 'cover').read_bytes(), image('Time Voyager (USA)', 'Named_Boxarts'))
         # A manual search, then skip.
-        status, body = self.request('POST', f'/api/scraper/resolve?id={job_id}&item={unmatched["item"]}&action=search&value=metroid')
+        status, body = self.request('POST', f'/api/scraper/resolve?id={job_id}&item={unmatched["item"]}&action=search&value=hunter')
         self.assertEqual(status, 200)
         found = next(p for p in json.loads(body)['job']['problems'] if p['item'] == unmatched['item'])
-        self.assertEqual(found['candidates'], ['Super Metroid (Japan, USA) (En,Ja)'])
+        self.assertEqual(found['candidates'], ['Space Hunter (Japan, USA) (En,Ja)'])
         self.request('POST', f'/api/scraper/resolve?id={job_id}&item={unmatched["item"]}&action=skip')
         self.assertEqual(self.job(job_id)['counts'].get('skipped'), 1)
         # The library shows what is stored; a new job fetches nothing already there.
@@ -302,7 +302,7 @@ class Scraper(unittest.TestCase):
         job = self.wait(job_id)
         self.assertEqual(job['counts'], {'ambiguous': 1, 'done': 2, 'partial': 1, 'unmatched': 1})
         self.assertEqual((job['downloaded']['files'], job['transferred']['files']), (8, 8))
-        dk = 'Donkey Kong Country 2 - Diddy\'s Kong Quest (USA)'
+        dk = 'Jungle Run 2 - Partner\'s Island Quest (USA)'
         self.assertEqual(self.stored(dk, 'title').read_bytes(), image(dk, 'Named_Titles'))
         # The console only asked whether files exist; every byte came through the helper.
         self.assertEqual(self.media_gets('Scraper'), [])
@@ -341,7 +341,7 @@ class Scraper(unittest.TestCase):
                 self.assertEqual(self.stored(label, kind).read_bytes(), image(label, folder))
 
     def test_shared_layout_is_what_frontends_read(self):
-        self.wait(self.start(lines=[f'snes\t{self.games["Donkey Kong Country 2 - Diddy\'s Kong Quest (USA)"]}']))
+        self.wait(self.start(lines=[f'snes\t{self.games["Jungle Run 2 - Partner\'s Island Quest (USA)"]}']))
         # The settings are remembered on the console.
         self.request('POST', '/api/scraper/settings?mode=pc&source=libretro&kinds=cover,title&region=eu&language=en')
         settings = json.loads(self.request('GET', '/api/scraper/settings')[1])
@@ -353,7 +353,7 @@ class Scraper(unittest.TestCase):
                           '{ char out[1024]; int found = ps5_library_media(v[1], v[2], v[3], v[4], out, sizeof out);'
                           ' printf("%d %s\\n", found, out); return 0; }\n')
         subprocess.run(['cc', '-std=c11', '-D_DEFAULT_SOURCE', '-Isrc', str(source), 'src/ps5_library.c', '-o', str(probe)], cwd=ROOT, check=True)
-        path = self.games["Donkey Kong Country 2 - Diddy's Kong Quest (USA)"]
+        path = self.games["Jungle Run 2 - Partner's Island Quest (USA)"]
         for system, folder, store in ((DB, 'Named_Boxarts', 'covers'), (DB + '.lpl', 'Named_Snaps', 'screenshots'),
                                       ('Nintendo - Super Nintendo Entertainment System', 'titlescreens', 'titlescreens')):
             out = subprocess.run([str(probe), str(self.root / 'library'), system, path, folder], capture_output=True, text=True).stdout
@@ -367,7 +367,7 @@ class Scraper(unittest.TestCase):
         # in both (scanned, and listed) was listed twice, with its media shared by both cards.
         folder = self.root / 'content' / DB
         folder.mkdir(parents=True)
-        listed = 'Donkey Kong Country 2 - Diddy\'s Kong Quest (USA).zip'
+        listed = 'Jungle Run 2 - Partner\'s Island Quest (USA).zip'
         self.games = {listed[:-4]: f'/app0/content/{DB}/{listed}',
                       # RetroArch's scan lists a disc's track beside its index: one game.
                       'Disc (USA) track': f'/app0/content/{DB}/Disc (USA).bin',
@@ -393,7 +393,7 @@ class Scraper(unittest.TestCase):
         self.assertTrue(young.exists())  # maybe a stale daemon's file still being written
 
     def test_a_game_shows_its_media_and_takes_the_users_own(self):
-        dk = 'Donkey Kong Country 2 - Diddy\'s Kong Quest (USA)'
+        dk = 'Jungle Run 2 - Partner\'s Island Quest (USA)'
         key = Path(self.games[dk]).stem
         self.wait(self.start(lines=[f'snes\t{self.games[dk]}']))
         status, body = self.request('GET', f'/api/library/game?system=snes&game={urllib.parse.quote(key)}')
@@ -403,7 +403,7 @@ class Scraper(unittest.TestCase):
         self.assertEqual(len(kinds), 10)  # every kind, present or not
         self.assertEqual((kinds['cover']['present'], kinds['cover']['type'], kinds['cover']['uploaded']), (True, 'png', False))
         self.assertEqual((kinds['fanart']['present'], kinds['video']['accepts']), (False, ['mp4', 'webm']))
-        self.assertEqual(game['details']['name'], "Donkey Kong Country 2 - Diddy's Kong Quest")
+        self.assertEqual(game['details']['name'], "Jungle Run 2 - Partner's Island Quest")
         query = f'system=snes&game={urllib.parse.quote(key)}'
         mine = b'\xff\xd8\xff' + b'my own cover' * 1000
         # A type no frontend shows, a game not in the library, a kind that does not exist,
@@ -443,7 +443,7 @@ class Scraper(unittest.TestCase):
     def test_library_sort_details(self):
         folder = self.root / 'library/snes/metadata'
         folder.mkdir(parents=True)
-        key = "Donkey Kong Country 2 - Diddy's Kong Quest (USA)"
+        key = "Jungle Run 2 - Partner's Island Quest (USA)"
         fields = {'released': '1995-11-20', 'genre': 'Platform', 'developer': 'Rare',
                   'publisher': 'Nintendo', 'rating': '0.90'}
         (folder / f'{key}.meta').write_text(''.join(f'{key} = "{value}"\n' for key, value in fields.items()))
@@ -573,7 +573,7 @@ class Scraper(unittest.TestCase):
         png = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg==')
         state_folder = self.root / 'savestates/Snes9x'
         state_folder.mkdir(parents=True)
-        key = Path(next(path for label, path in self.games.items() if 'Donkey Kong' in label)).stem
+        key = Path(next(path for label, path in self.games.items() if 'Jungle Run' in label)).stem
         (state_folder / (key + '.state5')).write_bytes(b'preview state')
         (state_folder / (key + '.state5.png')).write_bytes(png)
         with patch(__name__ + '.image', return_value=png):

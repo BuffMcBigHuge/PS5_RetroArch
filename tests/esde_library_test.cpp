@@ -60,11 +60,11 @@ int main(int argc, char **argv)
         "{\"items\": ["
         "{\"path\": \"" +
             snes +
-            "/Donkey Kong 2 (USA).zip\", \"label\": \"Donkey Kong 2\", \"core_path\": "
+            "/Jungle Run 2 (USA).zip\", \"label\": \"Jungle Run 2\", \"core_path\": "
             "\"DETECT\", \"db_name\": \"Nintendo - Super Nintendo Entertainment System.lpl\"},"
             "{\"path\": \"" +
             snes +
-            "/Hacks/Mario & Luigi.sfc\", \"label\": \"Mario & Luigi\", \"core_path\": "
+            "/Hacks/Mighty & Sidekick.sfc\", \"label\": \"Mighty & Sidekick\", \"core_path\": "
             "\"DETECT\", \"db_name\": \"Nintendo - Super Nintendo Entertainment System.lpl\"},"
             "{\"path\": \"/app0/content/Homebrew/demo.bin\", \"label\": \"Demo\", \"core_path\": "
             "\"DETECT\", "
@@ -73,19 +73,19 @@ int main(int argc, char **argv)
     write_text(
         dir + "/data/gamelists/snes/gamelist.xml",
         "<?xml version=\"1.0\"?>\n<gameList>\n"
-        "<game><path>./Donkey Kong 2 (USA).zip</path><name>DKC 2 (renamed in ES-DE)</name>"
+        "<game><path>./Jungle Run 2 (USA).zip</path><name>JR 2 (renamed in ES-DE)</name>"
         "<playcount>3</playcount><favorite>true</favorite></game>\n"
         "<game><path>./Gone (USA).zip</path><name>Gone</name><playcount>9</playcount></game>\n"
         "</gameList>\n");
 
     /* What RetroArch remembers: a favourite, the history, a runtime log; and ES-DE's
      * settings from before the collections default. */
-    const std::string luigi = snes + "/Hacks/Mario & Luigi.sfc";
+    const std::string sidekick = snes + "/Hacks/Mighty & Sidekick.sfc";
     write_text(dir + "/playlists/builtin/content_favorites.lpl",
-               "{\"items\": [{\"path\": \"" + luigi + "\"}]}");
+               "{\"items\": [{\"path\": \"" + sidekick + "\"}]}");
     write_text(dir + "/playlists/builtin/content_history.lpl",
                "{\"items\": [{\"path\": \"/app0/content/Homebrew/demo.bin\"}]}");
-    write_text(dir + "/playlists/logs/Snes9x/Donkey Kong 2 (USA).lrtl",
+    write_text(dir + "/playlists/logs/Snes9x/Jungle Run 2 (USA).lrtl",
                "{\"version\": \"1.0\", \"runtime\": \"0:02:05\", \"last_played\": "
                "\"2026-10-02 08:30:00\", \"play_count\": \"5\"}");
     write_text(dir + "/data/settings/es_settings.xml",
@@ -99,11 +99,10 @@ int main(int argc, char **argv)
      * its missing description filled; a name still the label is the scraped one. */
     for (const char *folder : {"/media", "/media/snes", "/media/snes/metadata"})
         mkdir((dir + folder).c_str(), 0755);
-    write_text(
-        media + "/snes/metadata/Donkey Kong 2 (USA).meta",
-        "description = \"Scraped \\\"text\\\"\\nline two\"\nname = \"Donkey Kong Country 2\"\n");
-    write_text(media + "/snes/metadata/Mario & Luigi.meta",
-               "developer = \"AlphaDream\"\nname = \"Mario & Luigi RPG\"\nrating = \"0.85\"\n"
+    write_text(media + "/snes/metadata/Jungle Run 2 (USA).meta",
+               "description = \"Scraped \\\"text\\\"\\nline two\"\nname = \"Jungle Run 2\"\n");
+    write_text(media + "/snes/metadata/Mighty & Sidekick.meta",
+               "developer = \"AlphaDream\"\nname = \"Mighty & Sidekick RPG\"\nrating = \"0.85\"\n"
                "released = \"2003-11-17\"\n");
     const struct ps5_esde_library_paths paths = {playlists.c_str(), info.c_str(), cores.c_str(),
                                                  reference.c_str(), data.c_str(), nullptr,
@@ -138,15 +137,15 @@ int main(int argc, char **argv)
     {
         count++;
         const std::string path = game.child_value("path");
-        if (path == "./Donkey Kong 2 (USA).zip") /* ES-DE's favourite kept; RetroArch's play */
-            kept = std::string(game.child_value("name")) == "DKC 2 (renamed in ES-DE)" &&
+        if (path == "./Jungle Run 2 (USA).zip") /* ES-DE's favourite kept; RetroArch's play */
+            kept = std::string(game.child_value("name")) == "JR 2 (renamed in ES-DE)" &&
                    std::string(game.child_value("playcount")) == "5" &&
                    std::string(game.child_value("playtime")) == "125" &&
                    std::string(game.child_value("lastplayed")) == "20261002T083000" &&
                    std::string(game.child_value("favorite")) == "true" &&
                    std::string(game.child_value("desc")) == "Scraped \"text\"\nline two";
-        if (path == "./Hacks/Mario & Luigi.sfc") /* RetroArch's favourite */
-            added = std::string(game.child_value("name")) == "Mario & Luigi RPG" &&
+        if (path == "./Hacks/Mighty & Sidekick.sfc") /* RetroArch's favourite */
+            added = std::string(game.child_value("name")) == "Mighty & Sidekick RPG" &&
                     std::string(game.child_value("developer")) == "AlphaDream" &&
                     std::string(game.child_value("releasedate")) == "20031117T000000" &&
                     std::string(game.child_value("rating")) == "0.85" &&
@@ -178,8 +177,8 @@ int main(int argc, char **argv)
     assert(ps5_esde_write_library_to(&paths, summary, sizeof(summary)) == 2);
     assert(std::string(summary).find("2 systems, 3 games (3 with ES-DE's details kept)") == 0);
 
-    /* Favourites in both frontends: in ES-DE the user takes DKC 2's away and Mario &
-     * Luigi's too; RetroArch did not change either since, so ES-DE's choice stands. */
+    /* Favourites in both frontends: in ES-DE the user takes JR 2's away and Mighty &
+     * Sidekick's too; RetroArch did not change either since, so ES-DE's choice stands. */
     const auto favourite = [&](const char *path)
     {
         pugi::xml_document list;
@@ -190,7 +189,7 @@ int main(int argc, char **argv)
         assert(!"a game the list should have");
         return false;
     };
-    assert(favourite("./Donkey Kong 2 (USA).zip") && favourite("./Hacks/Mario & Luigi.sfc"));
+    assert(favourite("./Jungle Run 2 (USA).zip") && favourite("./Hacks/Mighty & Sidekick.sfc"));
     const auto unfavourite_in_esde = [&]()
     {
         pugi::xml_document list;
@@ -201,12 +200,12 @@ int main(int argc, char **argv)
     };
     unfavourite_in_esde();
     assert(ps5_esde_write_library_to(&paths, summary, sizeof(summary)) == 2);
-    assert(!favourite("./Donkey Kong 2 (USA).zip") && !favourite("./Hacks/Mario & Luigi.sfc"));
-    /* RetroArch takes Mario & Luigi out and puts DKC 2 in: ES-DE follows. */
+    assert(!favourite("./Jungle Run 2 (USA).zip") && !favourite("./Hacks/Mighty & Sidekick.sfc"));
+    /* RetroArch takes Mighty & Sidekick out and puts JR 2 in: ES-DE follows. */
     write_text(dir + "/playlists/builtin/content_favorites.lpl",
-               "{\"items\": [{\"path\": \"" + snes + "/Donkey Kong 2 (USA).zip\"}]}");
+               "{\"items\": [{\"path\": \"" + snes + "/Jungle Run 2 (USA).zip\"}]}");
     assert(ps5_esde_write_library_to(&paths, summary, sizeof(summary)) == 2);
-    assert(favourite("./Donkey Kong 2 (USA).zip") && !favourite("./Hacks/Mario & Luigi.sfc"));
+    assert(favourite("./Jungle Run 2 (USA).zip") && !favourite("./Hacks/Mighty & Sidekick.sfc"));
     /* A later choice of the user's about the collections is kept. */
     write_text(dir + "/data/settings/es_settings.xml",
                "<?xml version=\"1.0\"?>\n<string name=\"CollectionSystemsAuto\" value=\"\" />\n");

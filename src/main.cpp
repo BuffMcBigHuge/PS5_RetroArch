@@ -371,7 +371,7 @@ int main(int process_argc, char **process_argv)
          * was unbuffered so that an assertion or a terminate, which abort without
          * flushing, kept their message; but every line was then its own write to
          * the console's storage, which takes milliseconds, on whatever thread
-         * logged it -- often the one running frames. Loading a God of War save
+         * logged it -- often the one running frames. Loading a PSP Test Game save
          * state stalled the picture for hundreds of milliseconds in fprintf alone
          * (2026-09-24, the sampler). The crash and terminate handlers flush
          * first, so a failing run still leaves its last lines. */

@@ -176,7 +176,7 @@ void *allocate(size_t size)
     /* A large buffer takes direct memory first too. Flexible memory is about
      * 450 MB for the whole title, and it is the only pool for what nothing else
      * can hold: a core's JIT code and the threads' stacks. RetroArch reads a
-     * save state whole, and loading Resident Evil 4's 260 MB entry state while
+     * save state whole, and loading GameCube Test Game 3's 260 MB entry state while
      * Dolphin booted left its JIT 45 MB of the 56 it maps, and the core wrote
      * its code through the null it got (2026-09-25). Direct memory is several
      * GiB. */
