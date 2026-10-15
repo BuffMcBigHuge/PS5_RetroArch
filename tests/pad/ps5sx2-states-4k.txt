@@ -1,4 +1,4 @@
-# PS5SX2 with Shadow of the Colossus (USA), started with --game=ps5sx2:<the .iso>.
+# PS5SX2 with a PS2 game, started with --game=ps5sx2:<the .iso>.
 # The internal resolution goes to 6x (~4K) as the Quick Menu sets it; a state is saved
 # and loaded through the Quick Menu's actions; MARK lines give the frames made over each
 # stretch, and the pictures show the game before and after the load.
